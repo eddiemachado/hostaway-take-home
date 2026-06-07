@@ -192,7 +192,7 @@ export function SlideDeck() {
                 >
                     {slide.kind === "title" ? (
                         <div className="py-10">
-                            <h1 className="font-canela text-display-2xl leading-tight text-primary">Eddie Machado</h1>
+                            <h1 className="text-display-2xl font-semibold leading-tight text-primary">Eddie Machado</h1>
                             <p className="mt-4 text-xl text-tertiary">Staff designer - Design systems</p>
                         </div>
                     ) : (
