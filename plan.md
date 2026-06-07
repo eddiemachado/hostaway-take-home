@@ -622,3 +622,17 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
     TextField (`onChange` gives a string). build + eslint + storybook + dev server (HTTP 200) green.
   - _Note: `src/tokens/` (our copy) and `src/styles/` (CLI's) both exist; the app loads
     `src/tokens/globals.css`. Consider consolidating to one token dir. (parking lot)_
+- **Storybook controls + autodocs.** Added `args`/`argTypes` + `autodocs` to catalog stories
+  (Button, Badge, Avatar, Input, Checkbox). PageHeader story exposes all slots via Controls
+  (toggle description/actions/tabs) + discrete stories (Full / TitleOnly / WithoutTabs /
+  WithoutActions). Restored Input/Checkbox/Avatar as individual catalog stories.
+- **Fixed Reservations story crash.** It threw `useTheme must be used within a ThemeProvider`
+  (the page's `ListPageTemplate` toggle needs the provider). Fixed by wrapping all Storybook
+  stories in `ThemeProvider` (driven by the theme toolbar). Verified light/dark/filter via a
+  Playwright screenshot helper (`scripts/shot.mjs`).
+- **Deliverable 3 written — `docs/roadmap.md`.** A 3–6 month adoption roadmap built on the user's
+  audit: Phase 0 audit-the-rest → Phase 1 tokens+foundations → Phase 2 systematise core
+  (Components/Patterns/Templates) → Phase 3 strangler-fig migration → Phase 4 adoption (design +
+  eng + AI). Grounded in the audit's positions: token metadata, Foundations/Components/Patterns/
+  Templates vocabulary, owned human+machine docs, Templates propagate change, lint kills Tailwind
+  ambiguity, agents for drift + token migration, and the "redesign test" success metric.
