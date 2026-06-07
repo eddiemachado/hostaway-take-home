@@ -3,12 +3,12 @@ import { createRoot } from "react-dom/client";
 import "@/tokens/globals.css";
 import "./site.css";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { MiniSite } from "./MiniSite";
+import { SlideDeck } from "./SlideDeck";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <ThemeProvider defaultTheme="light">
-            <MiniSite />
+            <SlideDeck />
         </ThemeProvider>
     </StrictMode>,
 );
