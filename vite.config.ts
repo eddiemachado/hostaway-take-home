@@ -18,6 +18,14 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url))
     }
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL("./index.html", import.meta.url)),
+        site: fileURLToPath(new URL("./site.html", import.meta.url))
+      }
+    }
+  },
   test: {
     projects: [{
       extends: true,

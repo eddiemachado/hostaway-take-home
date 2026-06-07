@@ -1,175 +1,135 @@
-# Adoption Roadmap (3–6 months)
+# Adoption Roadmap (6 months)
 
-> A realistic plan to get from where the system is today to where it needs to be:
-> how we'd audit the rest of the UI/infrastructure, how we'd **systematise** it (not solve it
-> ad hoc), how we'd drive adoption across design **and** engineering, plus a timeline and
-> milestones.
->
-> This builds directly on [01-audit.md](./01-audit.md). Read that first — the roadmap is the
-> "how we get there" for the problems diagnosed there.
+It's really difficult to come up with a clear plan without really understanding the system, but here's a rough idea of how I would approach Hostaway's current system.
 
 ---
 
-## Where we are → where we need to be
+## Pre-requisites
 
-**Today.** The UI was stood up fast by lifting Untitled UI components. That got us moving, but
-(per the audit) it isn't plug-and-play: styling lives as scattered Tailwind classes with *no
-clear answer* (`gap-4` vs `space-x-4` vs `gap-[16px]`), there's no token layer abstracting style
-from code, no owned documentation, and no shared vocabulary. Restyling means editing component
-code across hundreds of call sites.
+**We need to decide, along with Engineering leadership, what our tech stack should be.** The Design System needs to align with the product, engineering, and design vision. Especially as role boundaries are changing, we need alignment more than ever.
 
-**Target.** A **token-driven, documented system** — organised as **Foundations → Components →
-Patterns → Templates** — that *feels like Hostaway*, can be **restyled by changing tokens, not
-code**, and is usable by **designers, engineers, and AI** from the same source of truth.
+The Design System was spun up quickly using Untitled UI components. That got us moving, but we need to ensure we customize it and align it with our Design Language and codebase. These customizations need to be documented for both humans and AI so that we have expected outcomes everytime.
 
-### Guiding principles (from the audit)
-1. **Token-first.** Abstract styling out of the codebase into scoped, semantic tokens with
-   metadata (`usage` / `avoid` / `scoped` / `deprecated` / `replaceWith`).
-2. **One clear answer.** Kill Tailwind ambiguity with tokens + lint, so there's a single correct
-   way to express spacing/color/type.
-3. **Own the docs.** White-label docs are generic on purpose; we write context-specific docs for
-   **humans and machines** (*Use when / Prefer instead / Never for*), with code samples as the
-   most valuable artefact.
-4. **Familiar vocabulary.** Foundations / Components / Patterns / Templates — not the subjective
-   atom/molecule/organism split. *Who cares about edge cases — reduce friction.*
-5. **Systematise, don't firefight.** Every fix is encoded once (token, lint rule, codemod, agent)
-   so it propagates, rather than being applied screen-by-screen.
-6. **Templates propagate change.** Common configurations are wrapped as Templates
-   (`TemplateReservation`), so a change to a Button cascades through ButtonGroup → PageHeader →
-   FilterBar → Table everywhere it's used.
+## Goal
+
+A token-driven, ai-enabled, documented system.
 
 ---
 
-## Phase 0 — Audit the rest of the UI & infrastructure · Weeks 1–3
+## Audit the rest of the UI & infrastructure
 
-*Goal: a complete, prioritized picture before touching anything else.*
+**Month:** 1
 
-**How we'd audit it:**
-- **Automated inventory scan.** A script/agent crawls the codebase and catalogs: every UI surface,
-  which Untitled UI components were lifted, and all raw Tailwind usage. It flags the audit's
-  specific smells — hardcoded color/spacing values, ambiguous class patterns
-  (`gap-*` vs `space-x-*` vs arbitrary `[16px]`), duplicated/forked components, and variant sprawl.
-- **Token-gap analysis.** Map raw values → proposed tokens; quantify how many distinct
-  colors/spacings/radii are actually in use (usually far fewer than the code implies).
-- **Severity tagging.** Rank surfaces by *reuse frequency × inconsistency × migration effort* to
-  find the highest-leverage targets (Reservations, Listings, Calendar, Settings…).
-- **Baseline metrics.** Establish day-0 numbers we'll drive down: % surfaces on the system, count
-  of raw/arbitrary classes, count of component variants, doc coverage.
+**Goal:** a complete, prioritized picture before touching anything else.
 
-**Output:** an audit report, a prioritized migration backlog, and a coverage baseline dashboard.
+1. **Interface inventory (the visual audit)** 
+This is the classic screen by screen visual audit where we identify patterns and components that aren't aligned. How many variants we have of each, and how they are being used. We can do this both visually and also in the code using AI.
 
----
+2. **Component inventory (design + code)** 
+We need to ensure 100% parity between the codebase and our design files. This will help us craft a gameplan to fill in any gaps and also measure timelines bsed on complexity.
 
-## Phase 1 — Foundations & tokens · Weeks 3–6
+3. **Foundations / token audit** 
+Audit the codebase to see how much of it is using deprecated values, hardcoded strings, or primitives. We want to understand the work we need to do to enable proper token use.
 
-*Goal: the source of truth everything else hangs off.*
+4. **Accessibility audit** 
+Because we're using Untitled UI and they use React Aria, this should be setup, but we just want to flag any big issues.
 
-- **Define the token layer** — primitive → semantic → component-scoped tokens, each carrying the
-  metadata from the audit (`value`, `usage`, `avoid`, `scoped`, `deprecated`, `replaceWith`).
-  Tokens live in one JSON source of truth and compile to CSS variables → the Tailwind theme.
-- **Lock the vocabulary & naming** — Foundations / Components / Patterns / Templates, with
-  semantic, intuitive token names.
-- **Enforce "one clear answer"** — lint rules that ban arbitrary values and raw color/spacing,
-  requiring tokenised utilities. This is what stops the Tailwind ambiguity from returning.
-- **Stand up the docs system** — the doc template (human + machine: *Use when / Prefer instead /
-  Never for* + code samples) and where it lives (Storybook + co-located MD).
+6. **User interviews** 
+This is where we find out where the current setup is working and where it falls short. What are people spending the most time on and where can we streamline things.
 
-**Milestone:** tokens + conventions + lint live; docs structure + first 3 components documented.
+7. **AI interviews** 
+Because we're using AI to generate interfaces, we want to also see where the gaps are in understanding. Where do we hallucinate? Are there repo rules and guidelines? How efficient are they?
+
+**What this gives us to plan the rest of the project:**
+- A **prioritized backlog** of actions to take
+- **Baseline metrics** to drive down based on interviews
 
 ---
 
-## Phase 2 — Systematise the core · Weeks 6–12
+## Foundations & tokens
 
-*Goal: the most-used Components and Patterns, done the right way, once.*
+**Month:** 2
 
-- **Components** — migrate high-traffic Components to token-driven + documented: Button, Input,
-  Checkbox, Select, Badge, Avatar… Each ships with: scoped tokens, a doc (use/avoid/never + code
-  sample), and a Storybook story.
-- **Patterns** — build the key Patterns from our Components: PageHeader, FilterBar, Table, Dialog.
-- **Templates** — wrap common configurations as Templates (e.g. `TemplateReservation`) so screens
-  inherit pre-wired Patterns and changes propagate automatically.
-- **Governance (not ad hoc)** — contribution rules + a definition-of-done: *uses tokens, has a
-  doc, has a story, passes lint*. Encoded as CI gates, not reviewer goodwill.
-- **Automation / agents** — a **doc-drift agent** (keeps docs in sync with code) and a
-  **token-migration agent** that uses the `deprecated`/`replaceWith` metadata to swap old tokens
-  safely. Deterministic checks (lint, schema, drift) are the enforcement layer; agents do the
-  judgment work. *(Defense-in-depth: humans sign off on token/foundation changes — highest blast
-  radius.)*
+**Goal:** setting up a foundation that scales with our product.
 
-**Milestone:** core Components + key Patterns systematised; `TemplateReservation` shipped;
-governance + agents in place.
+All this is based off the audit and is subject to change based on those results, but this is a rough overview.
 
----
 
-## Phase 3 — Migrate surfaces (strangler-fig) · Weeks 10–20 *(overlaps Phase 2)*
+1. **Establisgh Design Language** 
+The will be aligning with the brand team to understand how we want to align both Product and Marketing. Do we need full alignment? Establish things like colors, typography, motion, spacing, etc. This step is purely documenting everything and will be used for everything going forward.
 
-*Goal: move the product onto the system surface-by-surface, never ad hoc.*
+2. **Define Tokens** 
+Let's take a look at the tokens we have, decide on a structure based on our engineering landscape and begin creating the tokens we'll use across the product. This includes adding metadata and a map so we can automate usage and replacements.
 
-- **New screens must use the system** — enforced by the definition-of-done.
-- **Migrate highest-traffic surfaces first**, one at a time, using codemods + the token-migration
-  agent + `replaceWith` metadata to do the mechanical work; humans handle judgment.
-- **Track the coverage metric climbing** and raw-class / variant counts trending to zero.
+3. **Iconography & Illustrations**
+Are we using a library? How do we want to manage our icons? We add the metadata to our library and ensure that we've got a system that scales.
 
-**Milestone:** 50%+ of high-traffic surfaces migrated; coverage target hit.
+4. **Docs Hub**
+Once we have all this information, where does it live? What's the source of truth? Is it Figma? Is it code? We make the decision based on our research and create the platform to house our future work.
+
+5. **AI schemas**
+Based on our work on the Design Language, we should have clear guidelines for the AI to follow as it helps us build out the rest of the componenents and patterns. 
+
+**Milestone:**
+- Documented Design Language (color, typography, spacing, motion, icons, illustration, etc)
+- Token library (primitives, semantic, component)
+- Documentation platform & strategy (Storybook? Figma? etc)
 
 ---
 
-## Phase 4 — Drive adoption (design + engineering) · Ongoing, Weeks 1–24
+## Build out components & patterns
 
-*Goal: make the system the path of least resistance for both crafts.*
+**Month:** 3-5
 
-**Designers — compose & extend:**
-- A Figma library mirrors the tokens/Components/Patterns 1:1; designers compose from Patterns and
-  extend by adding Foundations, never by forking.
-- Design reviews require system usage; office hours + a request path for new Patterns.
+**Goal:** building our components & patterns
 
-**Engineers — map to implementation:**
-- 1:1 mapping: doc → folder → Component → props; tokens → Tailwind theme.
-- CI gates (lint/drift/DoD) make non-system code fail the build; paired migrations to upskill.
+1. **AI Agents**
+We setup some agents to help us with basic token replacements using our metadata, audits, and gates for incoming PRs. This helps us "stop the bleeding" as we work and helps us silently align things that are being built and reducing debt.
 
-**Both:**
-- A design-systems working group + champions per squad; a public changelog; a metrics dashboard;
-  regular demos. The system has to be *easier than rolling your own* or adoption stalls.
+2. **Updating components**
+we make the nessecary changes to our components, updating them to fit our decisions made during our conversations with Engineering & Design. This is the biggest chunk of the work.
 
-**AI tooling — reliable pickup & reuse:**
-- The owned docs (human + machine) + a generated component manifest let AI scaffold and migrate
-  screens reliably; the drift + token-migration agents keep it honest. *(AI assists; deterministic
-  gates and human-authored docs remain the source of truth — we don't want to be over-reliant.)*
+3. **Workflows**
+As we work we want to leverage workflows and agents to help manage our documentation. When things are changed, they need to be auto updated in our changelog, sent to a slack channel, and update our docs. This is to ensure we don't drift as we work on things.
 
----
+4. **Establishing Patterns**
+Once we have components updated, we can start grouping them into Patterns. These will be much easier once the components are all setup. Templates will probably come a bit later as those will probably come from other teams contributing.
 
-## Timeline & milestones
-
-| When | Milestone |
-|---|---|
-| **End Wk 3** | Full audit + baseline coverage metric + prioritized migration backlog |
-| **End Wk 6** | Token layer + naming conventions + lint live; docs structure + first 3 Components documented |
-| **End Wk 12** | Core Components + key Patterns systematised; `TemplateReservation` shipped; governance + agents in place |
-| **End Wk 20** | 50%+ of high-traffic surfaces migrated (strangler-fig) |
-| **End Wk 24** | Adoption embedded (DoD + CI gates + champions); raw-class & variant debt down sharply; **"redesign test" passes** — a restyle ships by changing tokens, not code |
+**Milestone:** 
+- core list of components
+- core list of patterns
+- ai agents (bug fixer, token updater, drift detection)
+- worflow (PR gates, bug catchers, linting)
 
 ---
 
-## How we measure success
+## Migration & Governance 
+
+**Month:** 6+
+
+**Goal:** building a migration & governance plan
+
+1. **Governance plan**
+How do we log design decisions? How do we manage things like content design and a11y decisions? We need to establish a system
+
+2. **Contribution model**
+We want people to help contribute to the design system, this can happen via AI or traditional methods. What does that look like and how can we streamline it?
+
+3. **Migration**
+We do some of this in the previous phase, but we need to a slowly deprecate older components and patterns. This will be creating a plan with engineering leadership to ensure we don't break anything.
+
+**Milestone:** 
+- clear Contribution guidelines
+- clear Governance process and established guidelines
+- We hit our adoption metrics we stablished in earler phase
+
+---
+
+## How we'll measure success
+
 - **Coverage** — % of surfaces on the system (the headline metric).
-- **Consistency debt** — count of raw/arbitrary Tailwind values → trending to **0**.
+- **Consistency debt** — count of raw/deprecated values → trending to **0**.
 - **Variant sprawl** — count of component variants → trending **down**.
-- **Time-to-restyle** — the audit's "two redesigns in two years" test: changing brand color /
-  weight / radius should be a **token edit**, not a code migration.
-- **Doc coverage** — % of Components with *Use when / Prefer instead / Never for* + a code sample.
-- **Drift caught** — issues blocked by CI before merge (system staying honest).
-
-## Risks & mitigations
-| Risk | Mitigation |
-|---|---|
-| Tailwind ambiguity creeps back | Tokens + lint enforce "one clear answer"; codemods clean existing drift |
-| Adoption stalls | DoD + CI gates + champions; make the system the easiest path |
-| Token sprawl | Metadata + scoping + semantic naming keep tokens discoverable |
-| A future redesign breaks everything | Token abstraction (change values, not code) + visual-regression tests |
-| Over-reliance on AI | Docs are human-authored truth; AI assists, deterministic gates enforce |
+- **Drift caught** — issues blocked by workflows before merge 
 
 ---
-
-*Outcome: in 3–6 months Hostaway moves from lifted, hard-to-change Untitled UI components to a
-token-driven, documented system that feels like Hostaway, restyles in minutes, and is equally
-usable by designers, engineers, and AI.*
