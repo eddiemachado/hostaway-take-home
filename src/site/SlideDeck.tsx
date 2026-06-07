@@ -3,7 +3,7 @@ import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ArrowLeft, ArrowRight, Moon01, Sun } from "@untitledui/icons";
+import { ArrowLeft, ArrowRight, ArrowUpRight, LinkExternal01, Moon01, Sun } from "@untitledui/icons";
 import { useTheme } from "@/providers/theme-provider";
 // Rendered verbatim from the source docs — split into slides structurally, never edited.
 import auditContent from "../../docs/01-audit.md?raw";
@@ -120,19 +120,38 @@ export function SlideDeck() {
             </div>
 
             {/* top chrome */}
-            <header className="flex h-14 shrink-0 items-center justify-between px-5">
+            <header className="z-10 flex h-14 shrink-0 items-center justify-between border-b border-secondary bg-primary px-5 shadow-[0_8px_16px_-12px_rgba(10,13,18,0.12)]">
                 <div className="flex items-center gap-2.5">
                     <span className="flex size-7 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white" aria-hidden="true">H</span>
                     <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.section}</span>
                 </div>
-                <button
-                    type="button"
-                    onClick={() => setTheme(isDark ? "light" : "dark")}
-                    aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                    className="inline-flex size-9 items-center justify-center rounded-lg border border-primary bg-primary text-fg-quaternary shadow-xs transition duration-150 ease-out hover:bg-primary_hover hover:text-fg-quaternary_hover active:scale-95"
-                >
-                    {isDark ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
-                </button>
+                <nav className="flex items-center gap-1.5">
+                    <a
+                        href="/"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
+                    >
+                        Reservations
+                        <ArrowUpRight className="size-4 text-fg-quaternary" />
+                    </a>
+                    <a
+                        href="http://localhost:6007/"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
+                    >
+                        Storybook
+                        <LinkExternal01 className="size-4 text-fg-quaternary" />
+                    </a>
+                    <span className="mx-1 h-5 w-px bg-border-secondary" aria-hidden="true" />
+                    <button
+                        type="button"
+                        onClick={() => setTheme(isDark ? "light" : "dark")}
+                        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                        className="inline-flex size-9 items-center justify-center rounded-lg border border-primary bg-primary text-fg-quaternary shadow-xs transition duration-150 ease-out hover:bg-primary_hover hover:text-fg-quaternary_hover active:scale-95"
+                    >
+                        {isDark ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
+                    </button>
+                </nav>
             </header>
 
             {/* slide */}
@@ -147,7 +166,7 @@ export function SlideDeck() {
             </main>
 
             {/* bottom controls */}
-            <footer className="flex h-16 shrink-0 items-center justify-between gap-4 px-5">
+            <footer className="z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-t border-secondary bg-primary px-5 shadow-[0_-8px_16px_-12px_rgba(10,13,18,0.12)]">
                 <button
                     type="button"
                     onClick={prev}

@@ -49,6 +49,28 @@
 /* Code blocks are rendered by react-syntax-highlighter (its own <pre> + theme), so the
    default .prose pre styling is intentionally omitted here. Inline `code` keeps .prose styling. */
 
+/* Blockquotes as clean callouts: neutral surface + brand bar, upright (not italic). */
+.prose blockquote {
+    margin: 1.5rem 0;
+    padding: 0.875rem 1.25rem;
+    border-left: 3px solid var(--color-border-brand);
+    border-radius: 0 0.5rem 0.5rem 0;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-style: normal;
+}
+.prose blockquote p {
+    margin: 0.35rem 0;
+    font-style: normal;
+    font-weight: 500;
+}
+.prose blockquote p:first-child {
+    margin-top: 0;
+}
+.prose blockquote p:last-child {
+    margin-bottom: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .deck-slide,
     .deck-slide .prose > * {
