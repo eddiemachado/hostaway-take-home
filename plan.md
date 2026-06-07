@@ -602,3 +602,23 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   page story. _Surface strategy: Storybook is the catalog AND the Vite app still renders the live
   page — components built once in `src/`, consumed by both._ `build-storybook`, app build, eslint,
   tsc all green. Committed.
+- **🔁 DECISION REVERSED — use real Untitled UI components (hard requirement).** Earlier we
+  decided to "rebuild our own components on UUI tokens / don't lift their components." The user
+  clarified this is a **hard requirement: use Untitled UI's actual components, not our own.**
+  _Why the reversal: the brief says use Untitled UI as the component foundation; composing their
+  real atoms/molecules into our documented organisms → template → page still satisfies the audit
+  (the anti-pattern is lifting *organism-level* blocks with baked-in content, not using their
+  primitives)._
+  - Verified the needed components (table, pagination, base atoms) are **FREE** via the CLI — no
+    PRO/payment. Ran `untitledui init` in-repo + `untitledui add` for button, badges, input,
+    checkbox, avatar, table, tabs, select, dropdown, tooltip, pagination, date-picker.
+  - Recomposed `ReservationsPage` + organisms + template onto UUI components; **removed the
+    hand-built `src/atoms`, duplicate molecules, and generic `DataTable`.** Kept our genuinely-ours
+    composition layer (FilterBuilder, FilterBar, BulkActionBar, SavedViews, Toolbar, PageHeader,
+    FilterControl, FilterChip) + libs.
+  - Integration notes: relaxed tsc `noUnused*` (ESLint enforces for our code); ESLint ignores
+    vendored UUI dirs (`src/components/**`, `src/hooks/**`, CLI utils); one RA version-drift cast
+    in vendored `calendar.tsx`. UUI `Button` uses `color` (not `variant`); UUI `Input` is a RAC
+    TextField (`onChange` gives a string). build + eslint + storybook + dev server (HTTP 200) green.
+  - _Note: `src/tokens/` (our copy) and `src/styles/` (CLI's) both exist; the app loads
+    `src/tokens/globals.css`. Consider consolidating to one token dir. (parking lot)_
