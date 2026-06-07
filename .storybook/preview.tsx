@@ -1,14 +1,7 @@
-import { useEffect, type ReactNode } from "react";
 import type { Preview } from "@storybook/react-vite";
+import { ThemeProvider } from "../src/providers/theme-provider";
 // Design system foundations — tokens (light + dark), typography, Tailwind.
 import "../src/tokens/globals.css";
-
-function ThemeWrapper({ theme, children }: { theme: string; children: ReactNode }) {
-    useEffect(() => {
-        document.documentElement.classList.toggle("dark-mode", theme === "dark");
-    }, [theme]);
-    return <div className="bg-primary text-primary">{children}</div>;
-}
 
 const preview: Preview = {
     parameters: {
@@ -37,11 +30,23 @@ const preview: Preview = {
     },
     initialGlobals: { theme: "light" },
     decorators: [
-        (Story, context) => (
-            <ThemeWrapper theme={context.globals.theme as string}>
-                <Story />
-            </ThemeWrapper>
-        ),
+        (Story, context) => {
+            const theme = (context.globals.theme as string) ?? "light";
+            // Seed the provider from the toolbar value, then remount it (key) when the toggle
+            // changes so useTheme() works *and* the toolbar drives the active theme.
+            try {
+                localStorage.setItem("ui-theme", theme);
+            } catch {
+                /* ignore */
+            }
+            return (
+                <ThemeProvider key={theme} defaultTheme={theme as "light" | "dark"}>
+                    <div className="bg-primary text-primary">
+                        <Story />
+                    </div>
+                </ThemeProvider>
+            );
+        },
     ],
 };
 

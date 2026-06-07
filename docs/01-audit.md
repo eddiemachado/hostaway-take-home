@@ -232,10 +232,6 @@ Because the documentation is bare bones, AI is going to have a hard time underst
 - a value dragged within a range (use `Slider`)
 ```
 
-**But shouldn't they be the same?**
-
-Sure. Eventually, humans may rely on AI for implementation, but we will still be the ones _writing_ the documentation, so it should always be clear and easy to understand. 
-
 ### Tips for clearer documentation
 
 - Always say what you should & should **not** do. Any gaps will be filled in by the AI
@@ -245,17 +241,69 @@ Sure. Eventually, humans may rely on AI for implementation, but we will still be
 
 ---
 
-## Working example — Page header
+### Working example — Page header
 
+The `PageHeader` is actually a really great `Pattern` to have, we just need to make it ours and we absolutely need to ensure it's using our `components` within.
 
-**Today (monolithic):**
-`<PageHeader variant="quaternary" />` → one block, hardcoded title/tabs/actions, opaque variant.
+Out of the box, it actually supports different customizations. For example, here's the full `PageHeader`:
 
-**Where it breaks:** need a header with a different action set, or no tabs, or a longer title? →
-no path except a new variant or a fork.
+```ts
+<PageHeader 
+  title="Reservations" 
+  description="Manage bookings across every channel."
+  actions={...} 
+  tabs={...}
+  />
+```
 
-**Target (composed — see Deliverable 2):**
-`<PageHeader title={…} tabs={…} actions={…} />` built from `Title` + `TabNav` + `ActionGroup`,
-all resting on tokens. Composition replaces variants; the variant list collapses to zero.
+You can remove the buttons by removing the actions prop:
+
+```ts
+<PageHeader 
+  title="Reservations" 
+  description="Manage bookings across every channel."
+  tabs={...} 
+/>
+```
+
+You can remove the tabs by removing the tabs prop:
+```ts
+<PageHeader 
+  title="Reservations" 
+  description="Manage bookings across every channel."
+  actions={...} 
+/>
+```
+
+Now, instead of using the `primary` | `secondary` variants, we can wrap common configurations as `Templates`.
+
+So for the Reservation Page we could create a Template that has all the configured `components` and `patterns`:
+
+```ts
+// page header
+<PageHeader 
+  title="Reservations" 
+  description="Manage bookings across every channel."
+  actions={...} 
+/>
+// filter bar
+<FilterBar
+  prop="value"
+/>
+// reservation table
+<Table 
+  prop="value"
+/>
+```
+
+This way, when I load a template: `TemplateReservation` it has all these things already preconfigured. If changes are made in the future, everything is connected.
+
+**A change in the button is reflected in:**
+- inside the `ButtonGroup`
+- inside the `PageHeader`
+- inside the `FilterBar`
+- inside the `Table`
+
+Everything is connected and updated.
 
 ---
