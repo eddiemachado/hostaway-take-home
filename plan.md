@@ -579,3 +579,19 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   via property-specific namespaces (`--background-color-*` → `bg-primary`, etc.); confirmed against
   their component usage. Also saved their `CLAUDE.md` as `docs/UNTITLED_UI_REFERENCE.md` to inform
   our `AGENTS.md`. Committed (2 commits)._
+- **Relocation fix.** Project was created at `~/hostaway-take-home` but the IDE workspace is
+  `~/Documents/Personal/hostaway`. Moved the whole repo (git history intact) into the workspace.
+  _Root cause: chose the path at plan-creation without checking the open workspace._
+- **Deliverable 1 drafted.** Wrote `docs/01-audit.md` one-pager (monolith pattern, what doesn't
+  scale, what's missing, impact by audience, page-header worked example). User editing directly
+  (added an "Enabling AI" section + documentation tips).
+- **Build — Steps 2–5 complete: full atomic component system + Reservations page.** `cx` util
+  (clsx + tailwind-merge) + shared type-aware filter model (`src/lib/filtering.ts`). Atoms
+  (Button, IconButton, Input, Checkbox, Badge, Avatar, Spinner, Divider, Link, Tooltip);
+  molecules (SearchInput, TabNav, Select, Menu, FilterChip, TableHeaderCell, Pagination,
+  FilterControl); organisms (PageHeader, DataTable, BulkActionBar, Toolbar, FilterBar,
+  FilterBuilder, SavedViews); ListPageTemplate; ReservationsPage (mock data, batch-staged
+  multi-filter w/ live count, saved views via localStorage, sort, selection + bulk actions,
+  pagination, light/dark). React Aria + Untitled UI tokens. build + eslint green. Committed.
+  _Deviation: date filter uses native date inputs for now; production swaps to React Aria
+  DateRangePicker._
