@@ -4,6 +4,26 @@
  * staggered enter (opacity + translateY). Fully disabled under prefers-reduced-motion.
  */
 
+/* Display serif for headlines (trial). */
+@font-face {
+    font-family: "Canela";
+    src: url("./fonts/Canela-Regular-Trial.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+.font-canela {
+    font-family: "Canela", Georgia, "Times New Roman", serif;
+}
+
+/* Headlines within slides use Canela. */
+.deck-slide .prose :is(h1, h2, h3, h4) {
+    font-family: "Canela", Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+}
+
 /* Slide enter — the card eases up + sharpens. */
 .deck-slide {
     animation: deck-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;

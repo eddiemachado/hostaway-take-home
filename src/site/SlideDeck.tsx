@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -38,9 +38,11 @@ function splitSlides(md: string): string[] {
 
 const AUDIT_SLIDES = splitSlides(auditContent);
 const ROADMAP_SLIDES = splitSlides(roadmapContent);
-const SLIDES: { section: "Audit" | "Roadmap"; md: string }[] = [
-    ...AUDIT_SLIDES.map((md) => ({ section: "Audit" as const, md })),
-    ...ROADMAP_SLIDES.map((md) => ({ section: "Roadmap" as const, md })),
+type Slide = { kind: "title" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
+const SLIDES: Slide[] = [
+    { kind: "title" },
+    ...AUDIT_SLIDES.map((md) => ({ kind: "md" as const, section: "Audit" as const, md })),
+    ...ROADMAP_SLIDES.map((md) => ({ kind: "md" as const, section: "Roadmap" as const, md })),
 ];
 
 /** Markdown renderers: fenced code → syntax-highlighted block with line numbers; inline code stays inline. */
@@ -87,6 +89,18 @@ export function SlideDeck() {
     const total = SLIDES.length;
     const components = useMemo(() => makeComponents(isDark), [isDark]);
 
+    // Scroll-edge shadows: show the top border/shadow only once scrolled down, and the bottom
+    // only while more content remains below (i.e. the slide actually overflows).
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [edges, setEdges] = useState({ top: false, bottom: false });
+    const updateEdges = useCallback(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const top = el.scrollTop > 2;
+        const bottom = el.scrollTop + el.clientHeight < el.scrollHeight - 2;
+        setEdges((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
+    }, []);
+
     const goTo = useCallback((n: number) => setIndex(() => Math.min(total - 1, Math.max(0, n))), [total]);
     const next = useCallback(() => setIndex((i) => Math.min(total - 1, i + 1)), [total]);
     const prev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [total]);
@@ -109,6 +123,16 @@ export function SlideDeck() {
         return () => window.removeEventListener("keydown", onKey);
     }, [next, prev, goTo, total]);
 
+    // Recompute edges when the slide changes (content height differs) and on resize.
+    useEffect(() => {
+        const id = requestAnimationFrame(updateEdges);
+        window.addEventListener("resize", updateEdges);
+        return () => {
+            cancelAnimationFrame(id);
+            window.removeEventListener("resize", updateEdges);
+        };
+    }, [index, updateEdges]);
+
     const slide = SLIDES[index];
     const progress = ((index + 1) / total) * 100;
 
@@ -120,10 +144,14 @@ export function SlideDeck() {
             </div>
 
             {/* top chrome */}
-            <header className="z-10 flex h-14 shrink-0 items-center justify-between border-b border-secondary bg-primary px-5 shadow-[0_8px_16px_-12px_rgba(10,13,18,0.12)]">
+            <header
+                className={`z-10 flex h-14 shrink-0 items-center justify-between bg-primary px-5 transition-shadow duration-200 ${
+                    edges.top ? "border-b border-secondary shadow-[0_8px_16px_-12px_rgba(10,13,18,0.12)]" : "border-b border-transparent"
+                }`}
+            >
                 <div className="flex items-center gap-2.5">
                     <span className="flex size-7 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white" aria-hidden="true">H</span>
-                    <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.section}</span>
+                    {slide.kind === "md" && <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.section}</span>}
                 </div>
                 <nav className="flex items-center gap-1.5">
                     <a
@@ -156,17 +184,33 @@ export function SlideDeck() {
 
             {/* slide */}
             <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-4">
-                <div key={index} className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-1 py-2">
-                    <div className="prose">
-                        <Markdown remarkPlugins={[remarkGfm]} components={components}>
-                            {slide.md}
-                        </Markdown>
-                    </div>
+                <div
+                    key={index}
+                    ref={scrollRef}
+                    onScroll={updateEdges}
+                    className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-1 py-2"
+                >
+                    {slide.kind === "title" ? (
+                        <div className="py-10">
+                            <h1 className="font-canela text-display-2xl leading-tight text-primary">Eddie Machado</h1>
+                            <p className="mt-4 text-xl text-tertiary">Staff designer - Design systems</p>
+                        </div>
+                    ) : (
+                        <div className="prose">
+                            <Markdown remarkPlugins={[remarkGfm]} components={components}>
+                                {slide.md}
+                            </Markdown>
+                        </div>
+                    )}
                 </div>
             </main>
 
             {/* bottom controls */}
-            <footer className="z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-t border-secondary bg-primary px-5 shadow-[0_-8px_16px_-12px_rgba(10,13,18,0.12)]">
+            <footer
+                className={`z-10 flex h-16 shrink-0 items-center justify-between gap-4 bg-primary px-5 transition-shadow duration-200 ${
+                    edges.bottom ? "border-t border-secondary shadow-[0_-8px_16px_-12px_rgba(10,13,18,0.12)]" : "border-t border-transparent"
+                }`}
+            >
                 <button
                     type="button"
                     onClick={prev}
@@ -178,12 +222,12 @@ export function SlideDeck() {
                 </button>
 
                 <div className="flex flex-1 items-center justify-center gap-1.5">
-                    {SLIDES.map((s, i) => (
+                    {SLIDES.map((_s, i) => (
                         <button
                             key={i}
                             type="button"
                             onClick={() => goTo(i)}
-                            aria-label={`Go to ${s.section} slide ${i + 1}`}
+                            aria-label={`Go to slide ${i + 1}`}
                             aria-current={i === index}
                             className={
                                 i === index
