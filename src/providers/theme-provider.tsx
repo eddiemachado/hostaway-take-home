@@ -1,3 +1,5 @@
+/* Vendored from the Untitled UI CLI (light/dark/system + localStorage). Kept as-is. */
+/* eslint-disable react-refresh/only-export-components, react-hooks/exhaustive-deps */
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 

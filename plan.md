@@ -569,3 +569,13 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
 - **Decision — propagate the log-maintenance rule into `AGENTS.md`** at build time (added to its
   checklist item). _Why: make it a first-class project convention every agent/tool inherits, so a
   fresh session that reads only `AGENTS.md` still maintains the log._
+- **Build started — Step 1 complete: project setup + foundations.** Scaffolded Vite + React 19 +
+  TS; Tailwind CSS 4 via `@tailwindcss/vite`; added React Aria + `@untitledui/icons`. Sourced the
+  **real Untitled UI v8 token files** (`theme.css`, `typography.css`) via the free CLI and placed
+  them in `src/tokens/` as the single source of truth — full light/dark parity baked in via the
+  `.dark-mode` class. Reused Untitled UI's `ThemeProvider` (light/dark/system + localStorage).
+  Created the atomic folder structure and a foundations-verification page. `npm run build` and the
+  dev server are green. _Findings: Untitled UI v8 surfaces semantic tokens as Tailwind utilities
+  via property-specific namespaces (`--background-color-*` → `bg-primary`, etc.); confirmed against
+  their component usage. Also saved their `CLAUDE.md` as `docs/UNTITLED_UI_REFERENCE.md` to inform
+  our `AGENTS.md`. Committed (2 commits)._
