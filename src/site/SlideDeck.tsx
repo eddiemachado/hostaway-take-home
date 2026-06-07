@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import Markdown from "react-markdown";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ArrowLeft, ArrowRight, Moon01, Sun } from "@untitledui/icons";
 import { useTheme } from "@/providers/theme-provider";
 // Rendered verbatim from the source docs — split into slides structurally, never edited.
@@ -41,11 +43,49 @@ const SLIDES: { section: "Audit" | "Roadmap"; md: string }[] = [
     ...ROADMAP_SLIDES.map((md) => ({ section: "Roadmap" as const, md })),
 ];
 
+/** Markdown renderers: fenced code → syntax-highlighted block with line numbers; inline code stays inline. */
+function makeComponents(isDark: boolean): Components {
+    return {
+        // Code blocks render their own <pre>, so make Markdown's wrapper a pass-through.
+        pre: ({ children }) => <>{children}</>,
+        code({ className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className ?? "");
+            if (match) {
+                return (
+                    <SyntaxHighlighter
+                        language={match[1]}
+                        style={isDark ? oneDark : oneLight}
+                        showLineNumbers
+                        customStyle={{
+                            margin: "1.25rem 0",
+                            padding: "1rem 1.25rem",
+                            borderRadius: "0.625rem",
+                            border: "1px solid var(--color-border-secondary)",
+                            background: "var(--color-bg-secondary)",
+                            fontSize: "0.8125rem",
+                        }}
+                        codeTagProps={{ style: { background: "transparent", fontSize: "0.8125rem" } }}
+                        lineNumberStyle={{ minWidth: "2.25em", paddingRight: "1em", color: "var(--color-text-quaternary)", userSelect: "none" }}
+                    >
+                        {String(children).replace(/\n$/, "")}
+                    </SyntaxHighlighter>
+                );
+            }
+            return (
+                <code className={className} {...props}>
+                    {children}
+                </code>
+            );
+        },
+    };
+}
+
 export function SlideDeck() {
     const { theme, setTheme } = useTheme();
     const isDark = theme === "dark";
     const [index, setIndex] = useState(0);
     const total = SLIDES.length;
+    const components = useMemo(() => makeComponents(isDark), [isDark]);
 
     const goTo = useCallback((n: number) => setIndex(() => Math.min(total - 1, Math.max(0, n))), [total]);
     const next = useCallback(() => setIndex((i) => Math.min(total - 1, i + 1)), [total]);
@@ -73,7 +113,7 @@ export function SlideDeck() {
     const progress = ((index + 1) / total) * 100;
 
     return (
-        <div className="flex h-screen flex-col bg-secondary">
+        <div className="flex h-screen flex-col bg-primary">
             {/* progress */}
             <div className="h-0.5 w-full bg-transparent">
                 <div className="h-full bg-brand-solid transition-[width] duration-200 ease-out" style={{ width: `${progress}%` }} aria-hidden="true" />
@@ -97,12 +137,11 @@ export function SlideDeck() {
 
             {/* slide */}
             <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-4">
-                <div
-                    key={index}
-                    className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto rounded-2xl bg-primary p-6 shadow-xl ring-1 ring-secondary md:p-12"
-                >
+                <div key={index} className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-1 py-2">
                     <div className="prose">
-                        <Markdown remarkPlugins={[remarkGfm]}>{slide.md}</Markdown>
+                        <Markdown remarkPlugins={[remarkGfm]} components={components}>
+                            {slide.md}
+                        </Markdown>
                     </div>
                 </div>
             </main>

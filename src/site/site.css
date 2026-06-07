@@ -46,14 +46,8 @@
     }
 }
 
-/* Code blocks: lift off the card with a subtle surface + border. */
-.prose pre {
-    background: var(--color-bg-secondary);
-    border: 1px solid var(--color-border-secondary);
-    border-radius: 0.625rem;
-    padding: 1rem 1.25rem;
-    overflow-x: auto;
-}
+/* Code blocks are rendered by react-syntax-highlighter (its own <pre> + theme), so the
+   default .prose pre styling is intentionally omitted here. Inline `code` keeps .prose styling. */
 
 @media (prefers-reduced-motion: reduce) {
     .deck-slide,
