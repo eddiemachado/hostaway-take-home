@@ -68,39 +68,75 @@ Builders just want to build, sure it's helpful to categorize and organize your t
 
 **tldr;** - _use vocabulary the team is already familiar with to reduce confusion and reduce friction._
 
-
----
-
-### So what's missing?
-
-- **Tokens** — Untitled UI actually has tokens, but they aren't clearly documented. They're basically [the same tokens Tailwind]() uses. 
-
-- **No naming convention or layer model** — no shared vocabulary (atom/molecule/organism), so
-  contributors can't agree on where a thing belongs.
-
-- **Documentation** — props, variants, do/don't, and composition rules are
-  undocumented; the only "spec" is reading the source.
-
-- **AI-enablement** — Untitled isn't natively built with AI support because it doesn't know _how_ you will use the system. We need to manually add this content.
-
 ---
 
 ### What doesn't scale / can't be reused
 
+Untitled UI uses Tailwind as a foundation. The issue I have with Tailwind based systems is that there are too many options. Take this example of adding a gap between elements:
 
 ```html
-<!-- tag component -->
-<div 
-  class="flex cursor-default items-center gap-0.75 rounded-md bg-primary text-secondary ring-1 ring-primary outline-focus-ring transition duration-50 ease-linear ring-inset focus-visible:outline-2 focus-visible:outline-offset-2 px-2.25 py-0.5 text-sm font-medium pr-0.75" 
-  data-rac="" 
-  tabindex="0" data-collection="react-aria9034651726-_r_5lf_" 
-  data-key="react-aria-1" 
-  id="react-aria9034651726-_r_5la_-react-aria-1" 
-  role="row" 
-  aria-label="Label">
-    ...
-  </div>
+<div class="flex gap-4">        <!-- Dev A -->
+<div class="flex space-x-4">    <!-- Dev B -->
+<div class="flex gap-[16px]">   <!-- Dev C -->
 ```
+
+All are visually correct, but it makes maintaining the codebase a bit of a nightmare since there's no **clear answer**.
+
+Learning all the required classes can also be like learning a whole new language. For AI, this is a non-issue, but do we want to be *that* reliant on AI?
+
+Components should also match your codebase. If you're not using Tailwind in product, then this would cause even more confusion because now the UI is a mix & match.
+
+#### A real-world example: Updating a Design Language
+
+At Miro, we've had two redesigns in the last 2 years. This meant massive overhauls to our components and elements all over the product. Let's say we needed to do that at Hostaway. How would that work with Untitled UI?
+
+Let's say we wanted to change our buttons:
+- update the bg color
+- change the font weight to regular
+- change the border radius
+
+**Untitled UI:**
+
+Because the classes are shared amongst many elements, any change to the `bg-brand-solid` would create a lot of visual regression issues and need a TON of QA.
+
+```ts
+// change to tokens would impact EVERY element that uses this class
+--bg-brand-solid: purple.500 
+```
+
+You would also have to change the code of the component to replace old classes with new ones. This would require updating ALL the instances of the component throughout the UI, adding a ton of overhead.
+
+```ts
+// changes to component code
+const base =
+  font-semibold -> font-regular
+  rounded-lg -> rounded-xl
+```
+
+**Token based system:**
+
+With a system that relies on tokens, we abstract the styling layer from the codebase. Allowing us to style the components without ever touching the actual functionality. To change the styles, we would just update the token values.
+
+```ts
+// tokens are scoped to button component
+--button-bg: purple.500
+--button-font: fontWeight.regular
+--button-radius: radius.16
+```
+
+This also means, the component code isn't touched and doesn't risk any issues with functionality or require any of the hundreds of imports to be touched.
+
+```ts
+// no change to code
+const base = 
+  button-bg
+  button-font
+  button-radius
+```
+
+It's way more efficient and allows restyling elements to be multitudes faster because we're just updating one `json` file with our token definitions.
+
+
 - **Copy-paste drift.** Reuse means duplicating an organism and tweaking it; fixes and changes
   don't propagate. N copies, N truths.
 - **No single source of truth for foundations.** Colors, spacing, and type are hardcoded
