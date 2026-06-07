@@ -20,9 +20,10 @@
       "@/*": ["./src/*"]
     },
 
-    /* Linting */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    /* Linting — unused checks are delegated to ESLint (typescript-eslint) so vendored
+       Untitled UI components under src/components/** don't fail our build on their import style. */
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },

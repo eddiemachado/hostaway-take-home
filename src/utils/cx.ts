@@ -1,11 +1,24 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+const twMerge = extendTailwindMerge({
+    extend: {
+        theme: {
+            text: ["display-xs", "display-sm", "display-md", "display-lg", "display-xl", "display-2xl"],
+        },
+    },
+});
 
 /**
- * Merge class names with Tailwind-aware conflict resolution.
- * Later classes win over earlier ones (e.g. `cx("p-2", "p-4")` → `"p-4"`),
- * which lets consumers override component defaults predictably.
+ * This function is a wrapper around the twMerge function.
+ * It is used to merge the classes inside style objects.
  */
-export function cx(...inputs: ClassValue[]): string {
-    return twMerge(clsx(inputs));
+export const cx = twMerge;
+
+/**
+ * This function does nothing besides helping us to be able to
+ * sort the classes inside style objects which is not supported
+ * by the Tailwind IntelliSense by default.
+ */
+export function sortCx<T extends Record<string, string | number | Record<string, string | number | Record<string, string | number>>>>(classes: T): T {
+    return classes;
 }

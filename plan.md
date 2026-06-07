@@ -595,3 +595,10 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   pagination, light/dark). React Aria + Untitled UI tokens. build + eslint green. Committed.
   _Deviation: date filter uses native date inputs for now; production swaps to React Aria
   DateRangePicker._
+- **Decision — adopt Storybook as the component/token catalog (resolves parked Q#9).** Installed
+  Storybook 10 (Vite + React), wired to `src/tokens/globals.css` with a **light/dark toolbar
+  toggle** (`.dark-mode`). Wrote Foundations stories (Colors, Typography, Elevation & Radius),
+  atom/molecule/organism stories (co-located `*.stories.tsx`), and a fullscreen Reservations
+  page story. _Surface strategy: Storybook is the catalog AND the Vite app still renders the live
+  page — components built once in `src/`, consumed by both._ `build-storybook`, app build, eslint,
+  tsc all green. Committed.
