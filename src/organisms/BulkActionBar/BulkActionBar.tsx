@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@/atoms/Button";
+import { Button } from "@/components/base/buttons/button";
 import { cx } from "@/utils/cx";
 
 export interface BulkActionBarProps {
@@ -19,7 +19,7 @@ export const BulkActionBar = ({ count, onClear, children, className }: BulkActio
     >
         <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-secondary">{count} selected</span>
-            <Button variant="tertiary" size="sm" onPress={onClear}>
+            <Button color="tertiary" size="sm" onPress={onClear}>
                 Clear
             </Button>
         </div>

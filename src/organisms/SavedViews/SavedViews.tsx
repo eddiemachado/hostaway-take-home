@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { DialogTrigger, Popover, Dialog } from "react-aria-components";
 import { Bookmark, ChevronDown, Trash01 } from "@untitledui/icons";
-import { Button } from "@/atoms/Button";
-import { IconButton } from "@/atoms/IconButton";
-import { Input } from "@/atoms/Input";
-import { Divider } from "@/atoms/Divider";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 import { cx } from "@/utils/cx";
 import type { SavedView } from "@/lib/savedViews";
 
@@ -31,7 +29,7 @@ export const SavedViews = ({ views, onApply, onDelete, onSave, canSave }: SavedV
 
     return (
         <DialogTrigger>
-            <Button variant="secondary" size="sm" iconLeading={Bookmark} iconTrailing={ChevronDown}>
+            <Button color="secondary" size="sm" iconLeading={Bookmark} iconTrailing={ChevronDown}>
                 Views{views.length > 0 ? ` (${views.length})` : ""}
             </Button>
             <Popover
@@ -63,9 +61,9 @@ export const SavedViews = ({ views, onApply, onDelete, onSave, canSave }: SavedV
                                                     {view.filters.length} filter{view.filters.length === 1 ? "" : "s"}
                                                 </span>
                                             </button>
-                                            <IconButton
-                                                icon={Trash01}
-                                                variant="tertiary"
+                                            <Button
+                                                iconLeading={Trash01}
+                                                color="tertiary"
                                                 size="sm"
                                                 aria-label={`Delete view ${view.name}`}
                                                 onPress={() => onDelete(view.id)}
@@ -76,18 +74,17 @@ export const SavedViews = ({ views, onApply, onDelete, onSave, canSave }: SavedV
                                 </ul>
                             )}
 
-                            <Divider className="my-1" />
+                            <div className="my-1 h-px bg-border-secondary" />
 
                             <div className="flex flex-col gap-2 p-1.5">
                                 <Input
-                                    inputSize="sm"
+                                    size="sm"
                                     placeholder="Save current filters as…"
                                     aria-label="New view name"
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handleSave(close)}
+                                    onChange={(v) => setName(v)}
                                 />
-                                <Button variant="secondary" size="sm" isDisabled={!name.trim() || !canSave} onPress={() => handleSave(close)}>
+                                <Button color="secondary" size="sm" isDisabled={!name.trim() || !canSave} onPress={() => handleSave(close)}>
                                     {canSave ? "Save view" : "Add filters to save"}
                                 </Button>
                             </div>

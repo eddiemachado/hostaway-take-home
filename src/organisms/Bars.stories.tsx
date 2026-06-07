@@ -4,7 +4,7 @@ import { Download01, Mail01, SlashCircle01 } from "@untitledui/icons";
 import { FilterBar } from "./FilterBar";
 import { BulkActionBar } from "./BulkActionBar";
 import { SavedViews } from "./SavedViews";
-import { Button } from "@/atoms/Button";
+import { Button } from "@/components/base/buttons/button";
 import type { AppliedFilter } from "@/lib/filtering";
 import type { SavedView } from "@/lib/savedViews";
 import { RESERVATION_FIELDS } from "@/pages/ReservationsPage/data";
@@ -36,9 +36,9 @@ export const BulkActionBarStory: Story = {
     name: "BulkActionBar",
     render: () => (
         <BulkActionBar count={3} onClear={() => {}}>
-            <Button variant="secondary" size="sm" iconLeading={Mail01}>Message</Button>
-            <Button variant="secondary" size="sm" iconLeading={Download01}>Export</Button>
-            <Button variant="destructive" size="sm" iconLeading={SlashCircle01}>Cancel</Button>
+            <Button color="secondary" size="sm" iconLeading={Mail01}>Message</Button>
+            <Button color="secondary" size="sm" iconLeading={Download01}>Export</Button>
+            <Button color="primary-destructive" size="sm" iconLeading={SlashCircle01}>Cancel</Button>
         </BulkActionBar>
     ),
 };

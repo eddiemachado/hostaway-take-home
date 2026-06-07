@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactElement } from "react";
 import { DialogTrigger, Popover, Dialog } from "react-aria-components";
 import { Plus } from "@untitledui/icons";
-import { Button } from "@/atoms/Button";
-import { Select } from "@/molecules/Select";
+import { Button } from "@/components/base/buttons/button";
+import { Select } from "@/components/base/select/select";
 import { FilterControl } from "@/molecules/FilterControl";
 import { cx } from "@/utils/cx";
 import { emptyValue, isEmpty, type AppliedFilter, type FieldDef, type FilterValue } from "@/lib/filtering";
@@ -84,13 +84,15 @@ export const FilterBuilder = ({ trigger, isOpen, onOpenChange, fields, appliedFi
                                     <div className="flex items-center justify-between gap-2">
                                         <Select
                                             aria-label={`Field for condition ${i + 1}`}
-                                            options={fields.map((f) => ({ id: f.id, label: f.label }))}
+                                            items={fields.map((f) => ({ id: f.id, label: f.label }))}
                                             selectedKey={cond.fieldId}
-                                            onChange={(id) => changeField(i, id)}
+                                            onSelectionChange={(id) => id != null && changeField(i, String(id))}
                                             size="sm"
                                             className="w-44"
-                                        />
-                                        <Button variant="tertiary" size="sm" onPress={() => remove(i)}>
+                                        >
+                                            {(item) => <Select.Item id={item.id}>{item.label}</Select.Item>}
+                                        </Select>
+                                        <Button color="tertiary" size="sm" onPress={() => remove(i)}>
                                             Remove
                                         </Button>
                                     </div>
@@ -99,7 +101,7 @@ export const FilterBuilder = ({ trigger, isOpen, onOpenChange, fields, appliedFi
                             );
                         })}
 
-                        <Button variant="tertiary" size="sm" iconLeading={Plus} onPress={addCondition} className="self-start">
+                        <Button color="tertiary" size="sm" iconLeading={Plus} onPress={addCondition} className="self-start">
                             Add condition
                         </Button>
                     </div>
@@ -110,16 +112,16 @@ export const FilterBuilder = ({ trigger, isOpen, onOpenChange, fields, appliedFi
                                 Showing <span className="font-semibold text-primary">{count}</span> of {totalCount}
                             </span>
                             {draft.length > 0 && (
-                                <Button variant="tertiary" size="sm" onPress={() => setDraft([])}>
+                                <Button color="tertiary" size="sm" onPress={() => setDraft([])}>
                                     Clear all
                                 </Button>
                             )}
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="secondary" size="sm" onPress={() => onOpenChange(false)}>
+                            <Button color="secondary" size="sm" onPress={() => onOpenChange(false)}>
                                 Cancel
                             </Button>
-                            <Button variant="primary" size="sm" onPress={apply}>
+                            <Button color="primary" size="sm" onPress={apply}>
                                 Apply filters
                             </Button>
                         </div>

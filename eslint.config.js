@@ -6,7 +6,17 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // Ignore build output, Storybook output, and vendored Untitled UI code (their components,
+  // hooks, and CLI-synced utils are third-party — we don't lint their style).
+  globalIgnores([
+    'dist',
+    'storybook-static',
+    'src/components/**',
+    'src/hooks/**',
+    'src/utils/cx.ts',
+    'src/utils/is-react-component.ts',
+    'src/providers/theme-provider.tsx',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

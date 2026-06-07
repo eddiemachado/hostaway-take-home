@@ -1,5 +1,5 @@
-import { Checkbox } from "@/atoms/Checkbox";
-import { Input } from "@/atoms/Input";
+import { Checkbox } from "@/components/base/checkbox/checkbox";
+import { Input } from "@/components/base/input/input";
 import { cx } from "@/utils/cx";
 import type { DateValue, EnumValue, FieldDef, FilterValue, NumberValue, TextValue } from "@/lib/filtering";
 
@@ -11,7 +11,7 @@ export interface FilterControlProps {
 }
 
 /**
- * Renders the right value editor for a field's type:
+ * Renders the right value editor for a field's type, composed from Untitled UI components:
  *   enum → multi-select checkboxes · text → contains · number → min/max · date → range.
  * One molecule, many field types — see plan.md §2c.
  */
@@ -31,19 +31,18 @@ function EnumControl({ field, value, onChange }: { field: FieldDef; value: EnumV
         onChange(checked ? [...value, optionValue] : value.filter((v) => v !== optionValue));
     };
     return (
-        <div className="flex max-h-56 flex-col gap-1 overflow-auto">
+        <div className="flex max-h-56 flex-col gap-0.5 overflow-auto">
             {field.options?.map((opt) => (
-                <label key={opt.value} className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1.5 hover:bg-secondary_hover">
-                    <Checkbox isSelected={value.includes(opt.value)} onChange={(checked) => toggle(opt.value, checked)} aria-label={opt.label} />
-                    <span className="text-sm text-secondary">{opt.label}</span>
-                </label>
+                <div key={opt.value} className="rounded-md px-1 py-1.5 hover:bg-secondary">
+                    <Checkbox isSelected={value.includes(opt.value)} onChange={(checked) => toggle(opt.value, checked)} label={opt.label} />
+                </div>
             ))}
         </div>
     );
 }
 
 function TextControl({ value, onChange, label }: { value: TextValue; onChange: (v: TextValue) => void; label: string }) {
-    return <Input inputSize="sm" placeholder={`Contains…`} aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />;
+    return <Input size="sm" placeholder="Contains…" aria-label={label} value={value} onChange={(v) => onChange(v)} />;
 }
 
 function NumberControl({ value, onChange }: { value: NumberValue; onChange: (v: NumberValue) => void }) {
@@ -53,21 +52,21 @@ function NumberControl({ value, onChange }: { value: NumberValue; onChange: (v: 
     };
     return (
         <div className="flex items-center gap-2">
-            <Input inputSize="sm" type="number" placeholder="Min" aria-label="Minimum" value={value.min ?? ""} onChange={(e) => setPart("min", e.target.value)} />
+            <Input size="sm" type="number" placeholder="Min" aria-label="Minimum" value={value.min?.toString() ?? ""} onChange={(v) => setPart("min", v)} />
             <span className="text-sm text-quaternary">–</span>
-            <Input inputSize="sm" type="number" placeholder="Max" aria-label="Maximum" value={value.max ?? ""} onChange={(e) => setPart("max", e.target.value)} />
+            <Input size="sm" type="number" placeholder="Max" aria-label="Maximum" value={value.max?.toString() ?? ""} onChange={(v) => setPart("max", v)} />
         </div>
     );
 }
 
-// NOTE: native date inputs for now. Production swaps to React Aria DateRangePicker
-// (see plan.md — decision recorded). Kept lightweight to keep the multi-filter flow moving.
+// Uses Untitled UI Input (type=date) to keep ISO-string values in our filter model.
+// A richer option is UUI's DateRangePicker (CalendarDate-based) — noted as a future enhancement.
 function DateControl({ value, onChange }: { value: DateValue; onChange: (v: DateValue) => void }) {
     return (
         <div className="flex items-center gap-2">
-            <Input inputSize="sm" type="date" aria-label="From date" value={value.from ?? ""} onChange={(e) => onChange({ ...value, from: e.target.value || undefined })} />
+            <Input size="sm" type="date" aria-label="From date" value={value.from ?? ""} onChange={(v) => onChange({ ...value, from: v || undefined })} />
             <span className="text-sm text-quaternary">→</span>
-            <Input inputSize="sm" type="date" aria-label="To date" value={value.to ?? ""} onChange={(e) => onChange({ ...value, to: e.target.value || undefined })} />
+            <Input size="sm" type="date" aria-label="To date" value={value.to ?? ""} onChange={(v) => onChange({ ...value, to: v || undefined })} />
         </div>
     );
 }

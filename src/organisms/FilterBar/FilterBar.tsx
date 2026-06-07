@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Button } from "@/atoms/Button";
+import { Button } from "@/components/base/buttons/button";
 import { FilterChip } from "@/molecules/FilterChip";
 import { cx } from "@/utils/cx";
 import { summarize, type AppliedFilter, type FieldDef } from "@/lib/filtering";
@@ -45,7 +45,7 @@ export const FilterBar = ({ fields, filters, onEditFilters, onRemoveFilter, onCl
             })}
 
             {filters.length > 0 && (
-                <Button variant="tertiary" size="sm" onPress={onClearAll}>
+                <Button color="tertiary" size="sm" onPress={onClearAll}>
                     Clear all
                 </Button>
             )}

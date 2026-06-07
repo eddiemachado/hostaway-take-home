@@ -1,34 +1,34 @@
 import { useMemo, useState } from "react";
-import { Download01, DotsVertical, FilterLines, Mail01, Plus, SlashCircle01, UploadCloud02 } from "@untitledui/icons";
-import { Avatar } from "@/atoms/Avatar";
-import { Badge, type BadgeColor } from "@/atoms/Badge";
-import { Button } from "@/atoms/Button";
-import { IconButton } from "@/atoms/IconButton";
-import { SearchInput } from "@/molecules/SearchInput";
-import { TabNav } from "@/molecules/TabNav";
-import { Menu } from "@/molecules/Menu";
-import { Pagination } from "@/molecules/Pagination";
+import { Download01, Edit01, Eye, FilterLines, Mail01, Plus, SearchLg, SlashCircle01, UploadCloud02 } from "@untitledui/icons";
+import type { Key, Selection, SortDescriptor } from "react-aria-components";
+import { Avatar } from "@/components/base/avatar/avatar";
+import { Badge, BadgeWithDot, type BadgeColor } from "@/components/base/badges/badges";
+import { Button } from "@/components/base/buttons/button";
+import { Dropdown } from "@/components/base/dropdown/dropdown";
+import { Input } from "@/components/base/input/input";
+import { Table } from "@/components/application/table/table";
+import { Tabs } from "@/components/application/tabs/tabs";
+import { PaginationLine } from "@/components/application/pagination/pagination-line";
 import { PageHeader } from "@/organisms/PageHeader";
 import { Toolbar } from "@/organisms/Toolbar";
 import { FilterBar } from "@/organisms/FilterBar";
 import { FilterBuilder } from "@/organisms/FilterBuilder";
 import { SavedViews } from "@/organisms/SavedViews";
 import { BulkActionBar } from "@/organisms/BulkActionBar";
-import { DataTable, type Column, type SortState } from "@/organisms/DataTable";
 import { ListPageTemplate } from "@/templates/ListPageTemplate";
 import { applyFilters, type AppliedFilter } from "@/lib/filtering";
 import { useSavedViews } from "@/lib/savedViews";
 import { RESERVATIONS, RESERVATION_FIELDS, type Channel, type Reservation, type ReservationStatus } from "./data";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
-const channelColor: Record<Channel, BadgeColor> = {
+const channelColor: Record<Channel, BadgeColor<"pill-color">> = {
     Airbnb: "pink",
     "Booking.com": "blue",
     Vrbo: "indigo",
     Direct: "gray",
 };
-const statusColor: Record<ReservationStatus, BadgeColor> = {
+const statusColor: Record<ReservationStatus, BadgeColor<"pill-color">> = {
     Confirmed: "success",
     Pending: "warning",
     Cancelled: "error",
@@ -42,6 +42,7 @@ const formatDate = (iso: string) => {
     return `${MONTHS[m - 1]} ${d}, ${y}`;
 };
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const initialsOf = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 const TABS = [
     { id: "all", label: "All", match: () => true },
@@ -64,33 +65,19 @@ export default function ReservationsPage() {
     const [tab, setTab] = useState<string>("all");
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState<AppliedFilter[]>([]);
-    const [sort, setSort] = useState<SortState | null>({ columnId: "checkIn", direction: "asc" });
-    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({ column: "checkIn", direction: "ascending" });
+    const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
     const [page, setPage] = useState(1);
     const [builderOpen, setBuilderOpen] = useState(false);
 
     const { views, save, remove } = useSavedViews("hostaway.reservations.views");
 
-    // Changing the result set returns to the first page (kept in handlers, not an effect).
-    const changeTab = (key: string) => {
-        setTab(key);
-        setPage(1);
-    };
-    const changeSearch = (value: string) => {
-        setSearch(value);
-        setPage(1);
-    };
-    const commitFilters = (next: AppliedFilter[]) => {
-        setFilters(next);
-        setPage(1);
-    };
+    const changeTab = (key: string) => { setTab(key); setPage(1); setSelectedKeys(new Set()); };
+    const changeSearch = (value: string) => { setSearch(value); setPage(1); };
+    const commitFilters = (next: AppliedFilter[]) => { setFilters(next); setPage(1); };
 
-    const tabCounts = useMemo(
-        () => Object.fromEntries(TABS.map((t) => [t.id, RESERVATIONS.filter(t.match).length])),
-        [],
-    );
+    const tabCounts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.id, RESERVATIONS.filter(t.match).length])), []);
 
-    // base = current tab + free-text search (the context filters apply within).
     const base = useMemo(() => {
         const tabMatch = TABS.find((t) => t.id === tab)!.match;
         const q = search.trim().toLowerCase();
@@ -102,52 +89,25 @@ export default function ReservationsPage() {
     const filtered = useMemo(() => applyFilters(base, filters, RESERVATION_FIELDS), [base, filters]);
 
     const sorted = useMemo(() => {
-        if (!sort) return filtered;
-        const get = sortValue[sort.columnId];
+        const get = sortValue[String(sortDescriptor.column)];
         if (!get) return filtered;
-        const dir = sort.direction === "asc" ? 1 : -1;
+        const dir = sortDescriptor.direction === "ascending" ? 1 : -1;
         return [...filtered].sort((a, b) => {
             const av = get(a);
             const bv = get(b);
             return (av < bv ? -1 : av > bv ? 1 : 0) * dir;
         });
-    }, [filtered, sort]);
+    }, [filtered, sortDescriptor]);
 
     const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
     const safePage = Math.min(page, pageCount);
     const pageRows = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     const previewCount = (candidate: AppliedFilter[]) => applyFilters(base, candidate, RESERVATION_FIELDS).length;
-
-    const toggleSort = (columnId: string) =>
-        setSort((s) => (s?.columnId === columnId ? { columnId, direction: s.direction === "asc" ? "desc" : "asc" } : { columnId, direction: "asc" }));
-
-    const columns: Column<Reservation>[] = [
-        {
-            id: "guestName",
-            header: "Guest",
-            sortable: true,
-            cell: (r) => (
-                <div className="flex items-center gap-3">
-                    <Avatar name={r.guestName} size="sm" />
-                    <div className="flex flex-col">
-                        <span className="font-medium text-primary">{r.guestName}</span>
-                        <span className="text-xs text-quaternary">{r.code}</span>
-                    </div>
-                </div>
-            ),
-        },
-        { id: "property", header: "Property", sortable: true, cell: (r) => <span className="text-secondary">{r.property}</span> },
-        { id: "channel", header: "Channel", cell: (r) => <Badge color={channelColor[r.channel]}>{r.channel}</Badge> },
-        { id: "status", header: "Status", cell: (r) => <Badge color={statusColor[r.status]} dot>{r.status}</Badge> },
-        { id: "checkIn", header: "Check-in", sortable: true, cell: (r) => formatDate(r.checkIn) },
-        { id: "checkOut", header: "Check-out", sortable: true, cell: (r) => formatDate(r.checkOut) },
-        { id: "nights", header: "Nights", align: "right", sortable: true, cell: (r) => r.nights },
-        { id: "total", header: "Total", align: "right", sortable: true, cell: (r) => <span className="font-medium text-primary">{currency.format(r.total)}</span> },
-    ];
+    const selectedCount = selectedKeys === "all" ? pageRows.length : selectedKeys.size;
 
     const addFilterTrigger = (
-        <Button variant="secondary" size="sm" iconLeading={FilterLines}>
+        <Button color="secondary" size="sm" iconLeading={FilterLines}>
             Add filter
         </Button>
     );
@@ -160,27 +120,28 @@ export default function ReservationsPage() {
                     description="Manage bookings across every channel."
                     actions={
                         <>
-                            <Button variant="secondary" iconLeading={UploadCloud02}>
-                                Import
-                            </Button>
-                            <Button variant="primary" iconLeading={Plus}>
-                                New reservation
-                            </Button>
+                            <Button color="secondary" size="md" iconLeading={UploadCloud02}>Import</Button>
+                            <Button color="primary" size="md" iconLeading={Plus}>New reservation</Button>
                         </>
                     }
                     tabs={
-                        <TabNav
-                            aria-label="Reservation views"
-                            selectedKey={tab}
-                            onSelectionChange={changeTab}
-                            tabs={TABS.map((t) => ({ id: t.id, label: t.label, count: tabCounts[t.id] }))}
-                        />
+                        <Tabs selectedKey={tab} onSelectionChange={(k: Key) => changeTab(String(k))}>
+                            <Tabs.List type="underline" aria-label="Reservation views">
+                                {TABS.map((t) => (
+                                    <Tabs.Item key={t.id} id={t.id} label={t.label} badge={tabCounts[t.id]} />
+                                ))}
+                            </Tabs.List>
+                        </Tabs>
                     }
                 />
             }
             toolbar={
                 <Toolbar
-                    left={<SearchInput value={search} onChange={(e) => changeSearch(e.target.value)} placeholder="Search guest, code, property…" />}
+                    left={
+                        <div className="w-full max-w-xs">
+                            <Input icon={SearchLg} aria-label="Search reservations" placeholder="Search guest, code, property…" value={search} onChange={changeSearch} size="sm" />
+                        </div>
+                    }
                     right={
                         <>
                             <SavedViews
@@ -215,51 +176,78 @@ export default function ReservationsPage() {
                     totalCount={RESERVATIONS.length}
                 />
             }
-            footer={<Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />}
+            footer={<PaginationLine page={safePage} total={pageCount} onPageChange={setPage} />}
         >
             <div className="flex flex-col gap-4">
-                {selectedIds.size > 0 && (
-                    <BulkActionBar count={selectedIds.size} onClear={() => setSelectedIds(new Set())}>
-                        <Button variant="secondary" size="sm" iconLeading={Mail01}>
-                            Message
-                        </Button>
-                        <Button variant="secondary" size="sm" iconLeading={Download01}>
-                            Export
-                        </Button>
-                        <Button variant="destructive" size="sm" iconLeading={SlashCircle01}>
-                            Cancel
-                        </Button>
+                {selectedCount > 0 && (
+                    <BulkActionBar count={selectedCount} onClear={() => setSelectedKeys(new Set())}>
+                        <Button color="secondary" size="sm" iconLeading={Mail01}>Message</Button>
+                        <Button color="secondary" size="sm" iconLeading={Download01}>Export</Button>
+                        <Button color="primary-destructive" size="sm" iconLeading={SlashCircle01}>Cancel</Button>
                     </BulkActionBar>
                 )}
 
-                <DataTable
-                    columns={columns}
-                    rows={pageRows}
-                    getRowId={(r) => r.id}
-                    selectable
-                    selectedIds={selectedIds}
-                    onSelectionChange={setSelectedIds}
-                    sort={sort}
-                    onSortChange={toggleSort}
-                    emptyState={
-                        <div className="flex flex-col items-center gap-1">
-                            <p className="text-sm font-semibold text-secondary">No reservations match your filters</p>
-                            <p className="text-sm text-tertiary">Try removing a filter or clearing your search.</p>
-                        </div>
-                    }
-                    rowActions={(r) => (
-                        <Menu
-                            aria-label={`Actions for ${r.guestName}`}
-                            trigger={<IconButton icon={DotsVertical} variant="tertiary" size="sm" aria-label="Row actions" />}
-                            items={[
-                                { id: "view", label: "View details", onAction: () => {} },
-                                { id: "edit", label: "Edit reservation", onAction: () => {} },
-                                { id: "message", label: "Message guest", onAction: () => {} },
-                                { id: "cancel", label: "Cancel reservation", danger: true, onAction: () => {} },
-                            ]}
-                        />
-                    )}
-                />
+                <Table
+                    aria-label="Reservations"
+                    selectionMode="multiple"
+                    selectedKeys={selectedKeys}
+                    onSelectionChange={setSelectedKeys}
+                    sortDescriptor={sortDescriptor}
+                    onSortChange={setSortDescriptor}
+                >
+                    <Table.Header>
+                        <Table.Head id="guestName" label="Guest" isRowHeader allowsSorting />
+                        <Table.Head id="property" label="Property" allowsSorting />
+                        <Table.Head id="channel" label="Channel" />
+                        <Table.Head id="status" label="Status" />
+                        <Table.Head id="checkIn" label="Check-in" allowsSorting />
+                        <Table.Head id="checkOut" label="Check-out" allowsSorting />
+                        <Table.Head id="nights" label="Nights" allowsSorting />
+                        <Table.Head id="total" label="Total" allowsSorting />
+                        <Table.Head id="actions" />
+                    </Table.Header>
+                    <Table.Body items={pageRows}>
+                        {(row) => (
+                            <Table.Row id={row.id}>
+                                <Table.Cell>
+                                    <div className="flex items-center gap-3">
+                                        <Avatar size="sm" alt={row.guestName} initials={initialsOf(row.guestName)} />
+                                        <div className="flex flex-col">
+                                            <span className="font-medium text-primary">{row.guestName}</span>
+                                            <span className="text-xs text-quaternary">{row.code}</span>
+                                        </div>
+                                    </div>
+                                </Table.Cell>
+                                <Table.Cell>{row.property}</Table.Cell>
+                                <Table.Cell>
+                                    <Badge color={channelColor[row.channel]} type="pill-color" size="sm">{row.channel}</Badge>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <BadgeWithDot color={statusColor[row.status]} type="pill-color" size="sm">{row.status}</BadgeWithDot>
+                                </Table.Cell>
+                                <Table.Cell>{formatDate(row.checkIn)}</Table.Cell>
+                                <Table.Cell>{formatDate(row.checkOut)}</Table.Cell>
+                                <Table.Cell>{row.nights}</Table.Cell>
+                                <Table.Cell>
+                                    <span className="font-medium text-primary">{currency.format(row.total)}</span>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <Dropdown.Root>
+                                        <Dropdown.DotsButton />
+                                        <Dropdown.Popover className="w-min">
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item icon={Eye}><span className="pr-4">View details</span></Dropdown.Item>
+                                                <Dropdown.Item icon={Edit01}><span className="pr-4">Edit reservation</span></Dropdown.Item>
+                                                <Dropdown.Item icon={Mail01}><span className="pr-4">Message guest</span></Dropdown.Item>
+                                                <Dropdown.Item icon={SlashCircle01}><span className="pr-4">Cancel reservation</span></Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown.Popover>
+                                    </Dropdown.Root>
+                                </Table.Cell>
+                            </Table.Row>
+                        )}
+                    </Table.Body>
+                </Table>
             </div>
         </ListPageTemplate>
     );

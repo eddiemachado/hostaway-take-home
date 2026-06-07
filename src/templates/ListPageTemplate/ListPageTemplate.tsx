@@ -1,7 +1,7 @@
 import type { FC, ReactNode } from "react";
 import { Bell01, Building02, CalendarCheck01, LayoutAlt01, Moon01, Settings01, Sun, User01 } from "@untitledui/icons";
-import { Avatar } from "@/atoms/Avatar";
-import { IconButton } from "@/atoms/IconButton";
+import { Avatar } from "@/components/base/avatar/avatar";
+import { Button } from "@/components/base/buttons/button";
 import { useTheme } from "@/providers/theme-provider";
 import { cx } from "@/utils/cx";
 
@@ -30,9 +30,10 @@ function ThemeToggle() {
     const { theme, setTheme } = useTheme();
     const isDark = theme === "dark";
     return (
-        <IconButton
-            variant="tertiary"
-            icon={isDark ? Sun : Moon01}
+        <Button
+            color="tertiary"
+            size="sm"
+            iconLeading={isDark ? Sun : Moon01}
             aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             onPress={() => setTheme(isDark ? "light" : "dark")}
         />
@@ -75,9 +76,9 @@ export const ListPageTemplate = ({ header, toolbar, filters, children, footer }:
             {/* Topbar */}
             <div className="flex h-16 shrink-0 items-center justify-end gap-1 border-b border-secondary bg-primary px-6">
                 <ThemeToggle />
-                <IconButton variant="tertiary" icon={Bell01} aria-label="Notifications" />
+                <Button color="tertiary" size="sm" iconLeading={Bell01} aria-label="Notifications" />
                 <span className="ml-2">
-                    <Avatar name="Ava Reyes" size="sm" />
+                    <Avatar size="sm" alt="Ava Reyes" initials="AR" />
                 </span>
             </div>
 

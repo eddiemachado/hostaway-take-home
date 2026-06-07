@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { FilterLines } from "@untitledui/icons";
 import { FilterBuilder } from "./FilterBuilder";
-import { Button } from "@/atoms/Button";
+import { Button } from "@/components/base/buttons/button";
 import { applyFilters, summarize, type AppliedFilter } from "@/lib/filtering";
 import { RESERVATIONS, RESERVATION_FIELDS } from "@/pages/ReservationsPage/data";
 
@@ -18,7 +18,7 @@ const Demo = () => {
         <div className="flex flex-col gap-4">
                 <FilterBuilder
                     trigger={
-                        <Button variant="secondary" iconLeading={FilterLines}>
+                        <Button color="secondary" iconLeading={FilterLines}>
                             Add filter
                         </Button>
                     }
