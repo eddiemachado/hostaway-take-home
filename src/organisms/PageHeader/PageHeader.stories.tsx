@@ -6,36 +6,84 @@ import { PageHeader } from "./PageHeader";
 import { Button } from "@/components/base/buttons/button";
 import { Tabs } from "@/components/application/tabs/tabs";
 
-const meta: Meta<typeof PageHeader> = { title: "Organisms/PageHeader", component: PageHeader };
-export default meta;
-type Story = StoryObj<typeof PageHeader>;
+/**
+ * Composed page header — Title + (description) + ActionGroup + Tabs.
+ *
+ * `actions` and `tabs` are optional ReactNode slots: omit a prop to remove that region.
+ * The booleans below (`withActions`, `withTabs`, `withDescription`) are story-only helpers so
+ * you can toggle each slot live from the Controls panel.
+ */
+interface DemoArgs {
+    title: string;
+    description: string;
+    withDescription: boolean;
+    withActions: boolean;
+    withTabs: boolean;
+}
 
-/** Composed: Title + description + ActionGroup + Tabs — replaces the monolithic variant block. */
-const Demo = () => {
+const Demo = ({ title, description, withDescription, withActions, withTabs }: DemoArgs) => {
     const [tab, setTab] = useState("all");
     return (
         <PageHeader
-            title="Reservations"
-            description="Manage bookings across every channel."
+            title={title}
+            description={withDescription ? description : undefined}
             actions={
-                <>
-                    <Button color="secondary" size="md" iconLeading={UploadCloud02}>Import</Button>
-                    <Button color="primary" size="md" iconLeading={Plus}>New reservation</Button>
-                </>
+                withActions ? (
+                    <>
+                        <Button color="secondary" size="md" iconLeading={UploadCloud02}>Import</Button>
+                        <Button color="primary" size="md" iconLeading={Plus}>New reservation</Button>
+                    </>
+                ) : undefined
             }
             tabs={
-                <Tabs selectedKey={tab} onSelectionChange={(k: Key) => setTab(String(k))}>
-                    <Tabs.List type="underline" aria-label="Views">
-                        <Tabs.Item id="all" label="All" badge={36} />
-                        <Tabs.Item id="upcoming" label="Upcoming" badge={14} />
-                        <Tabs.Item id="cancelled" label="Cancelled" badge={7} />
-                    </Tabs.List>
-                </Tabs>
+                withTabs ? (
+                    <Tabs selectedKey={tab} onSelectionChange={(k: Key) => setTab(String(k))}>
+                        <Tabs.List type="underline" aria-label="Views">
+                            <Tabs.Item id="all" label="All" badge={36} />
+                            <Tabs.Item id="upcoming" label="Upcoming" badge={14} />
+                            <Tabs.Item id="cancelled" label="Cancelled" badge={7} />
+                        </Tabs.List>
+                    </Tabs>
+                ) : undefined
             }
         />
     );
 };
 
-export const Default: Story = { render: () => <Demo /> };
+const meta: Meta<typeof Demo> = {
+    title: "Organisms/PageHeader",
+    component: PageHeader,
+    tags: ["autodocs"],
+    render: (args) => <Demo {...args} />,
+    args: {
+        title: "Reservations",
+        description: "Manage bookings across every channel.",
+        withDescription: true,
+        withActions: true,
+        withTabs: true,
+    },
+    argTypes: {
+        title: { control: "text" },
+        description: { control: "text" },
+        withDescription: { control: "boolean", name: "Show description" },
+        withActions: { control: "boolean", name: "Show actions" },
+        withTabs: { control: "boolean", name: "Show tabs" },
+    },
+};
+export default meta;
+type Story = StoryObj<typeof Demo>;
 
-export const TitleOnly: Story = { args: { title: "Listings", description: "Your published properties." } };
+/** Everything on — toggle slots from the Controls panel. */
+export const Playground: Story = {};
+
+/** Title + description + actions + tabs. */
+export const Full: Story = { args: { withActions: true, withTabs: true } };
+
+/** Just the title block — no actions, no tabs (omit both props). */
+export const TitleOnly: Story = { args: { withActions: false, withTabs: false, withDescription: true } };
+
+/** Actions without tabs (omit the `tabs` prop). */
+export const WithoutTabs: Story = { args: { withActions: true, withTabs: false } };
+
+/** Tabs without actions (omit the `actions` prop). */
+export const WithoutActions: Story = { args: { withActions: false, withTabs: true } };

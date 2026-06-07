@@ -6,17 +6,28 @@ import { Button } from "@/components/base/buttons/button";
 const meta: Meta<typeof Button> = {
     title: "Atoms/Button",
     component: Button,
-    args: { children: "Button", color: "primary", size: "md" },
+    tags: ["autodocs"],
+    args: { children: "Button", color: "primary", size: "md", isLoading: false, isDisabled: false },
     argTypes: {
-        color: { control: "select", options: ["primary", "secondary", "tertiary", "primary-destructive", "secondary-destructive", "link-color", "link-gray"] },
+        children: { control: "text", description: "Button label" },
+        color: {
+            control: "select",
+            options: ["primary", "secondary", "tertiary", "primary-destructive", "secondary-destructive", "tertiary-destructive", "link-color", "link-gray"],
+        },
         size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"] },
         isLoading: { control: "boolean" },
         isDisabled: { control: "boolean" },
+        showTextWhileLoading: { control: "boolean" },
+        // Non-control props (functions / icon components).
+        iconLeading: { control: false },
+        iconTrailing: { control: false },
+        onPress: { control: false, table: { disable: true } },
     },
 };
 export default meta;
 type Story = StoryObj<typeof Button>;
 
+/** Tweak every prop live from the Controls panel. */
 export const Playground: Story = {};
 
 export const Colors: Story = {
