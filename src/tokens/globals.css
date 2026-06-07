@@ -1,0 +1,67 @@
+/**
+ * Global stylesheet — single entry point for the design system's foundations.
+ *
+ * Token sources of truth (do not hardcode values elsewhere):
+ *   - theme.css      → colors, type scale, spacing, radius, shadows (light + dark)
+ *   - typography.css → prose styles for long-form content
+ *
+ * Tokens are derived from Untitled UI (v8, Tailwind CSS 4) and rebuilt here as the
+ * foundation of our atomic system. See docs/02-design-language.md for provenance.
+ */
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+
+@plugin "@tailwindcss/typography";
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
+
+/* Dark mode is driven by a `.dark-mode` class on the root element (see ThemeProvider). */
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
+@custom-variant label (& [data-label]);
+@custom-variant focus-input-within (&:has(input:focus));
+
+@utility scrollbar-hide {
+    &::-webkit-scrollbar {
+        display: none;
+        -webkit-appearance: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+@utility transition-inherit-all {
+    transition-property: inherit;
+    transition-duration: inherit;
+    transition-timing-function: inherit;
+}
+
+html,
+body {
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-variant-ligatures: contextual;
+    font-kerning: normal;
+}
+
+/* App-level baseline so the page picks up themed surface + text colors. */
+body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+}
+
+/* Hide default number-input spinners. */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* Hide default search clear button. */
+input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
