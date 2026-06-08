@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Children, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -117,6 +117,24 @@ function makeRoadmapComponents(base: Components): Components {
     };
 }
 
+/** Metrics slide: split each "**Label** — description" into a block label + smaller description. */
+function makeMetricsComponents(base: Components): Components {
+    return {
+        ...base,
+        li({ children }) {
+            const items = Children.toArray(children);
+            const label = items[0];
+            const rest = items.slice(1).map((c, i) => (i === 0 && typeof c === "string" ? c.replace(/^\s*[—–-]\s*/, "") : c));
+            return (
+                <li>
+                    <span className="metric-label">{label}</span>
+                    <span className="metric-desc">{rest}</span>
+                </li>
+            );
+        },
+    };
+}
+
 /** At-a-glance horizontal timeline of the phased months (overview slide). */
 function RoadmapOverview() {
     return (
@@ -177,6 +195,7 @@ export function SlideDeck() {
     const total = SLIDES.length;
     const components = useMemo(() => makeComponents(isDark), [isDark]);
     const roadmapComponents = useMemo(() => makeRoadmapComponents(components), [components]);
+    const metricsComponents = useMemo(() => makeMetricsComponents(roadmapComponents), [roadmapComponents]);
 
     // Scroll-edge shadows: show the top border/shadow only once scrolled down, and the bottom
     // only while more content remains below (i.e. the slide actually overflows).
@@ -284,17 +303,26 @@ export function SlideDeck() {
                     ) : slide.kind === "wrapup" ? (
                         <WrapUp />
                     ) : (
-                        <div
-                            className={
-                                slide.section === "Roadmap"
-                                    ? `prose roadmap-prose${/measure success/i.test(slide.md) ? " metrics" : ""}`
-                                    : "prose"
+                        (() => {
+                            if (slide.section !== "Roadmap") {
+                                return (
+                                    <div className="prose">
+                                        <Markdown remarkPlugins={[remarkGfm]} components={components}>
+                                            {slide.md}
+                                        </Markdown>
+                                    </div>
+                                );
                             }
-                        >
-                            <Markdown remarkPlugins={[remarkGfm]} components={slide.section === "Roadmap" ? roadmapComponents : components}>
-                                {slide.md}
-                            </Markdown>
-                        </div>
+                            const isPhase = /\*\*Month:\*\*/.test(slide.md);
+                            const isMetrics = /measure success/i.test(slide.md);
+                            return (
+                                <div className={`prose roadmap-prose${isPhase ? " phase" : ""}${isMetrics ? " metrics" : ""}`}>
+                                    <Markdown remarkPlugins={[remarkGfm]} components={isMetrics ? metricsComponents : roadmapComponents}>
+                                        {slide.md}
+                                    </Markdown>
+                                </div>
+                            );
+                        })()
                     )}
                 </div>
             </main>

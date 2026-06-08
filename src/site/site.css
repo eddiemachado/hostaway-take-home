@@ -73,9 +73,9 @@
 
 /* ── Roadmap timeline treatment ───────────────────────────────────────────────
    Purely presentational styling of the roadmap markdown — content is untouched.
-   A left rail runs down each phase; Month → pill node, Goal → lead, numbered steps →
-   cards, Milestone (+ following list) → success callout. */
-.roadmap-prose {
+   The left rail runs down PHASE slides only (those with a Month); Month → pill node,
+   Goal → lead, numbered steps → cards, Milestone (+ following list) → success callout. */
+.roadmap-prose.phase {
     position: relative;
     border-left: 2px solid var(--color-border-secondary);
     padding-left: 1.75rem;
@@ -214,10 +214,18 @@
     background: var(--color-bg-secondary);
     border: 1px solid var(--color-border-secondary);
     border-radius: 0.625rem;
-    color: var(--color-text-tertiary);
 }
-.roadmap-prose.metrics > ul > li strong {
+/* Label on its own line; description one step smaller beneath it. */
+.roadmap-prose.metrics .metric-label {
+    display: block;
+    margin-bottom: 0.25rem;
     color: var(--color-text-primary);
+    font-weight: 600;
+}
+.roadmap-prose.metrics .metric-desc {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
 }
 
 @media (prefers-reduced-motion: reduce) {
