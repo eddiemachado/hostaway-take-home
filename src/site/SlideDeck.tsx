@@ -161,13 +161,13 @@ function WrapUp() {
     const cards = [
         { k: "The problem", v: "Untitled UI got us moving fast, but it isn't a system yet: no single source of truth, no owned docs, and Tailwind leaves no clear answer." },
         { k: "The approach", v: "Own the foundations as tokens, build a common vocabulary, and write a system where AI is a support system rather than the engine." },
-        { k: "The plan", v: "Audit → foundations & tokens → build components & patterns → migration & governance, with agents and workflows keeping us aligned as we build." },
+        { k: "The plan", v: "Update Untitled UI to use a custom token system that builds upon the Hostaway brand. Leverage documentation to support contributions fromboth humans and AI." },
     ];
     return (
         <div className="py-6">
             <h2 className="mb-3 text-display-sm font-semibold text-primary">Wrapping up</h2>
             <p className="mb-8 max-w-2xl text-lg text-tertiary">
-                The goal isn't to throw away Untitled UI — it's to make it ours: a system that feels like Hostaway and scales.
+                The goal isn't to throw away Untitled UI, it's to make it ours: a system that feels like Hostaway and scales.
             </p>
             <div className="grid gap-4 sm:grid-cols-3">
                 {cards.map((c) => (
@@ -183,7 +183,6 @@ function WrapUp() {
                     The outcome: a token-driven, AI-enabled, documented system — restyled by changing tokens, not code.
                 </p>
             </div>
-            <p className="mt-8 text-md text-tertiary">Thanks for reading — happy to dig into any part of this.</p>
         </div>
     );
 }
@@ -285,7 +284,7 @@ export function SlideDeck() {
                     key={index}
                     ref={scrollRef}
                     onScroll={updateEdges}
-                    className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-1 py-2"
+                    className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-4 py-2"
                 >
                     {slide.kind === "title" ? (
                         <div className="py-10">
