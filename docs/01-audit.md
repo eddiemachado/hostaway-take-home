@@ -4,7 +4,7 @@
 organism-based, Untitled-UI-lifted approach break down? What doesn’t scale, what can’t be reused,
 and what’s missing in terms of structure and documentation? Show us how you read the situation.
 
-### Untitled UI as a baseline
+# Untitled UI as a baseline
 
 When using these libraries, specifically Untitled UI, it's not a plug and play solution. It offers the main benefit of getting you up quickly, but you still need to do the work to get it to _**feel**_ like Hostaway.
 
@@ -22,7 +22,7 @@ Learning all the required classes can also be like learning a whole new language
 
 Components should also match your codebase. If you're not using Tailwind in product, then this would cause even more confusion because now the UI is a mix & match.
 
-#### A real-world example: Updating a Design Language
+#### A real-world example: Updating your Design Language
 
 At Miro, we've had two redesigns in the last 2 years. This meant massive overhauls to our components and elements all over the product. Let's say we needed to do that at Hostaway. How would that work with Untitled UI?
 
@@ -74,7 +74,7 @@ sizes: {
 
 **Token based system:**
 
-With a system that relies on tokens, we abstract the styling layer from the codebase. Allowing us to style the components without ever touching the actual functionality. To change the styles, we would just update the token values.
+With a system that relies on tokens, we abstract the styling layer from the behavior layer. Allowing us to style the components without ever touching the actual functionality. To change the styles, we would just update the token values.
 
 ```ts
 // tokens are scoped to button component
@@ -142,76 +142,92 @@ Not only is this metadata useful, it allows us to leverage agents to replace old
 
 ---
 
-### Atomic design
+# Atomic design
 
-> Rebuild the screen the right way using atomic design. We’d expect to see the full stack:
->- Atoms, molecules, and organisms that compose into the components above
->- A template that the screen sits within, and the resulting page
->- A documented design language: e.g. a markdown / MD file that defines the system so it can be
-read and used consistently
+I've used atomic design principles in the past but I've always found them a bit confusing as different people have a different opinion on what's an `atom`, `molucule`, etc. 
 
-I've used atomic design principles in the past but I've always found them a bit confusing as different people have a different opinion on what's an atom, molucule, etc. 
+`atoms` are identified as things like buttons, inputs, etc. But what makes up the atoms? what do we call the tokens?
 
-For example:
-- `atoms` are identified as things like buttons, inputs, etc. But what makes up the atoms? what do we call the tokens?
-- `molocules` and `organisms` are too similar. It feels very subjective and redundant
+`molocules` and `organisms` feel too similar and can lead to lengthy conversations about classification, which really doesn't matter to anyone outside the Design System team.
+
+> **molecules** - relatively simple groups of UI elements functioning together as a unit. For example, a form label, search input, and button can join together to create a search form molecule.
+
+> **organisms** - relatively complex UI components composed of groups of molecules and/or atoms and/or other organisms. A header organism might consist of dissimilar elements such as a logo image, primary navigation list, and search form.
 
 What I've found works better is a simpler system that most people are already familiar with:
 
 - **Foundations** - base later that everything is built on
-- **Fomponents** - reusable elements that are built using foundations
+- **Components** - reusable elements that are built using foundations
 - **Patterns** - a group of components that work together to create parts of the UI
-- **Templates** - a page comprising of components & patterns, all built off the foundations
+- **Templates** - a contextual group of components & patterns usually for performing a specific task or present specific data
+- **Pages** - a view within the application, usually comprised of patterns and templates 
 
 **It's the same concept, just without that layer of subjectivity.**
 
 Here's an example of what would live in this system:
 
-#### Foundations
-- design tokens
-- typography styles
-- motion principles
+**Foundations:**
+- color tokens
+- spacing tokens
+- typography tokens
+- motion, radius, elevation tokens
+- iconography & illustrations
 
-#### Components
+**Components:**
 - buttons
 - inputs
 - checkboxes
 
-#### Patterns
+**Patterns:**
 - dialog
-- copy/paste
 - table
-- page header
+- pageHeader
 
-#### Template
-- reservations view
-- settings view
+**Template:**
+- Reservation table
+- Registration form
 
-### Why _any_ system isn't perfect
+**It's still based on atomic principles, just using the common words most people are familiar with.**
+
+This way there's a clearer vision of what belongs where and you avoid all the conversations about the minutia of definitions.
+
+# No one solution is perfect
 
 Ultimately, no naming structure is perfect. There will always be edge cases, for example:
 
 - is `buttonGroup` a pattern because it's composed of  `buttons`?
 - is `breadcrumbs` a pattern because it's composed of `links`?
 
-**Personally, I would categorize these as components, but the real answer is: `Who cares?`**
+You could also split things up and add an **Events** category. Things like `Copy & Paste` or `Close` are things that are used plenty of times within the product. They could live within Patterns, but can be seperated if it makes more sense to the team.
 
-Builders just want to build, sure it's helpful to categorize and organize your tools, but IMO, the simpler the better. At the end of the day, too many layers of abstraction will cause more confusion than needed.
 
-**tldr;** - _use vocabulary the team is already familiar with to reduce confusion and reduce friction._
+**The real answer is: "Who cares?"**
+
+Builders just want to build. Structure and organization are crucial but, the simpler the better. I like to base a system around the structure and vocabulary the team already uses internally. It helps adoption and allows us to reduce the learning curve or something feeling 'totally different'. At the end of the day, too many layers of abstraction will cause more confusion than needed.
+
+**tldr;** - _Every system is different and requires personalized structure. I like to use vocabulary the team is already familiar with to reduce confusion and friction._
 
 ---
 
-### Enabling builders
-
-> Be explicit about how three audiences would use this system:
->- Designers how they compose and extend it
->- Engineers how it maps to implementation
->- AI tooling how the documented language lets AI pick up and reuse the system reliably
+# Enabling builders
 
 Documentation for these white label libraries are really generic, but they're generic on purpose. They don't understand the context you're going to use these components, but you do. We should own the documentation and write things ourselves so that the components make sense for our use cases.
 
-Because the documentation is bare bones, AI is going to have a hard time understanding when & where to use components. We need to enable docs for both humans & machines:
+**Designers or Engineers, who needs the documentation?**
+
+A few months ago, I would have told you we needed two seperate sets of documentation to explain our system, but today it's a different story.
+
+Documentation is becoming less and less for humans and more of a context tool. 
+
+**Why open a whole new website to look up a component property when you can just ask AI?**
+
+Documentation has changed from being something people use as a reference to something that builders expect the AI to know by default. **We should bring documentation to where the builders are, not have them go looking for it.**
+
+**Empoweing AI**
+
+AI will have a hard time understanding when & where to use components if it's not explicitly explained. We need to enable docs that are over explanatory while still ensuring they're human readable.
+
+**Here's what a simple component guideline would look like:**
 
 ```md
 ## Input
@@ -232,7 +248,9 @@ Because the documentation is bare bones, AI is going to have a hard time underst
 - a value dragged within a range (use `Slider`)
 ```
 
-### Tips for clearer documentation
+While this is a super basic overview, it answers a lot of open questions that many people may think the AI should _just know_. While AI is getting better every day, we can't expect it to read our minds...not yet at least.
+
+**Tips for clearer documentation**
 
 - Always say what you should & should **not** do. Any gaps will be filled in by the AI
 - When writing, ask the AI if there are any open questions or conflicts before publishing
@@ -241,7 +259,7 @@ Because the documentation is bare bones, AI is going to have a hard time underst
 
 ---
 
-### Working example — Page header
+# Working example — Page header
 
 The `PageHeader` is actually a really great `Pattern` to have, we just need to make it ours and we absolutely need to ensure it's using our `components` within.
 

@@ -4,19 +4,17 @@ It's really difficult to come up with a clear plan without really understanding 
 
 ---
 
-## Pre-requisites
+# Pre-requisites
 
 **We need to decide, along with Engineering leadership, what our tech stack should be.** The Design System needs to align with the product, engineering, and design vision. Especially as role boundaries are changing, we need alignment more than ever.
 
 The Design System was spun up quickly using Untitled UI components. That got us moving, but we need to ensure we customize it and align it with our Design Language and codebase. These customizations need to be documented for both humans and AI so that we have expected outcomes everytime.
 
-## Goal
-
-A token-driven, ai-enabled, documented system.
+**Goal:** A token-driven, ai-enabled, documented system.
 
 ---
 
-## Audit the rest of the UI & infrastructure
+# Audit the rest of the UI & infrastructure
 
 **Month:** 1
 
@@ -46,7 +44,7 @@ Because we're using AI to generate interfaces, we want to also see where the gap
 
 ---
 
-## Foundations & tokens
+# Foundations & tokens
 
 **Month:** 2
 
@@ -55,7 +53,7 @@ Because we're using AI to generate interfaces, we want to also see where the gap
 All this is based off the audit and is subject to change based on those results, but this is a rough overview.
 
 
-1. **Establisgh Design Language** 
+1. **Establish Design Language** 
 The will be aligning with the brand team to understand how we want to align both Product and Marketing. Do we need full alignment? Establish things like colors, typography, motion, spacing, etc. This step is purely documenting everything and will be used for everything going forward.
 
 2. **Define Tokens** 
@@ -77,7 +75,7 @@ Based on our work on the Design Language, we should have clear guidelines for th
 
 ---
 
-## Build out components & patterns
+# Build out components & patterns
 
 **Month:** 3-5
 
@@ -103,7 +101,7 @@ Once we have components updated, we can start grouping them into Patterns. These
 
 ---
 
-## Migration & Governance 
+# Migration & Governance 
 
 **Month:** 6+
 
@@ -125,7 +123,7 @@ We do some of this in the previous phase, but we need to a slowly deprecate olde
 
 ---
 
-## How we'll measure success
+# How we'll measure success
 
 - **Coverage** — % of surfaces on the system (the headline metric).
 - **Consistency debt** — count of raw/deprecated values → trending to **0**.

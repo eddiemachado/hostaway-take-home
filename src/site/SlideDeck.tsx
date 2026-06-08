@@ -38,12 +38,32 @@ function splitSlides(md: string): string[] {
 
 const AUDIT_SLIDES = splitSlides(auditContent);
 const ROADMAP_SLIDES = splitSlides(roadmapContent);
-type Slide = { kind: "title" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
+const ROADMAP_TITLE = roadmapContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Roadmap";
+
+type Slide = { kind: "title" } | { kind: "overview" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
 const SLIDES: Slide[] = [
     { kind: "title" },
     ...AUDIT_SLIDES.map((md) => ({ kind: "md" as const, section: "Audit" as const, md })),
+    { kind: "overview" },
     ...ROADMAP_SLIDES.map((md) => ({ kind: "md" as const, section: "Roadmap" as const, md })),
 ];
+
+/** Phases that carry a `Month:` — drives the overview timeline (title + month from the doc). */
+const PHASES = ROADMAP_SLIDES.map((md) => ({
+    title: md.match(/^#{1,3}\s+(.+)$/m)?.[1]?.trim() ?? "",
+    month: md.match(/\*\*Month:\*\*\s*(.+)/)?.[1]?.trim() ?? null,
+})).filter((p): p is { title: string; month: string } => p.month != null);
+
+/** Read a paragraph's leading `**Label:**` (e.g. "Month:", "Goal:", "Milestone:") if present. */
+function leadingStrongLabel(node: unknown): string {
+    const n = node as { children?: Array<{ type?: string; tagName?: string; children?: Array<{ type?: string; value?: string }> }> };
+    const first = n?.children?.[0];
+    if (first?.type === "element" && first.tagName === "strong") {
+        const text = first.children?.[0];
+        if (text?.type === "text") return text.value ?? "";
+    }
+    return "";
+}
 
 /** Markdown renderers: fenced code → syntax-highlighted block with line numbers; inline code stays inline. */
 function makeComponents(isDark: boolean): Components {
@@ -82,12 +102,48 @@ function makeComponents(isDark: boolean): Components {
     };
 }
 
+/** Roadmap-only renderers: tag Month / Goal / Milestone paragraphs so CSS can style the timeline. */
+function makeRoadmapComponents(base: Components): Components {
+    return {
+        ...base,
+        p({ node, children }) {
+            const label = leadingStrongLabel(node);
+            if (label === "Month:") return <p className="rm-month">{children}</p>;
+            if (label === "Goal:") return <p className="rm-goal">{children}</p>;
+            if (label === "Milestone:") return <p className="rm-milestone">{children}</p>;
+            return <p>{children}</p>;
+        },
+    };
+}
+
+/** At-a-glance horizontal timeline of the phased months (overview slide). */
+function RoadmapOverview() {
+    return (
+        <div className="py-6">
+            <h2 className="mb-10 text-display-sm font-semibold text-primary">{ROADMAP_TITLE}</h2>
+            <div className="relative flex justify-between gap-3">
+                <div className="absolute inset-x-3 top-3 h-0.5 bg-border-secondary" aria-hidden="true" />
+                {PHASES.map((p, i) => (
+                    <div key={p.title} className="relative flex flex-1 flex-col items-start gap-2">
+                        <span className="z-10 flex size-6 items-center justify-center rounded-full bg-brand-solid text-xs font-bold text-white ring-4 ring-[var(--color-bg-primary)]">
+                            {i + 1}
+                        </span>
+                        <span className="text-xs font-semibold tracking-wide text-brand-secondary uppercase">Month {p.month}</span>
+                        <span className="text-sm font-medium text-primary">{p.title}</span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function SlideDeck() {
     const { theme, setTheme } = useTheme();
     const isDark = theme === "dark";
     const [index, setIndex] = useState(0);
     const total = SLIDES.length;
     const components = useMemo(() => makeComponents(isDark), [isDark]);
+    const roadmapComponents = useMemo(() => makeRoadmapComponents(components), [components]);
 
     // Scroll-edge shadows: show the top border/shadow only once scrolled down, and the bottom
     // only while more content remains below (i.e. the slide actually overflows).
@@ -151,7 +207,9 @@ export function SlideDeck() {
             >
                 <div className="flex items-center gap-2.5">
                     <span className="flex size-7 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white" aria-hidden="true">H</span>
-                    {slide.kind === "md" && <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.section}</span>}
+                    {slide.kind !== "title" && (
+                        <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.kind === "overview" ? "Roadmap" : slide.section}</span>
+                    )}
                 </div>
                 <nav className="flex items-center gap-1.5">
                     <a
@@ -195,9 +253,11 @@ export function SlideDeck() {
                             <h1 className="text-display-2xl font-semibold leading-tight text-primary">Eddie Machado</h1>
                             <p className="mt-4 text-xl text-tertiary">Staff designer - Design systems</p>
                         </div>
+                    ) : slide.kind === "overview" ? (
+                        <RoadmapOverview />
                     ) : (
-                        <div className="prose">
-                            <Markdown remarkPlugins={[remarkGfm]} components={components}>
+                        <div className={slide.section === "Roadmap" ? "prose roadmap-prose" : "prose"}>
+                            <Markdown remarkPlugins={[remarkGfm]} components={slide.section === "Roadmap" ? roadmapComponents : components}>
                                 {slide.md}
                             </Markdown>
                         </div>
