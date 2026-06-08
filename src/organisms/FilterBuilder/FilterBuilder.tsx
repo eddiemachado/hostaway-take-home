@@ -66,17 +66,17 @@ export const FilterBuilder = ({ trigger, isOpen, onOpenChange, fields, appliedFi
             <Popover
                 placement="bottom start"
                 className={cx(
-                    "w-[30rem] max-w-[calc(100vw-2rem)] rounded-xl border border-secondary bg-primary shadow-lg outline-none",
+                    "flex max-h-[80vh] w-[30rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border border-secondary bg-primary shadow-lg outline-none",
                     "data-[entering]:animate-in data-[entering]:fade-in-0 data-[entering]:zoom-in-95 data-[exiting]:animate-out data-[exiting]:fade-out-0",
                 )}
             >
-                <Dialog className="flex max-h-[80vh] flex-col outline-none" aria-label="Build filters">
-                    <div className="border-b border-secondary px-4 py-3">
+                <Dialog className="flex min-h-0 flex-1 flex-col outline-none" aria-label="Build filters">
+                    <div className="shrink-0 border-b border-secondary px-4 py-3">
                         <h2 className="text-sm font-semibold text-primary">Filters</h2>
                         <p className="text-xs text-tertiary">All conditions must match (AND).</p>
                     </div>
 
-                    <div className="flex flex-col gap-3 overflow-auto p-4">
+                    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto p-4">
                         {draft.map((cond, i) => {
                             const field = fieldFor(cond.fieldId);
                             return (
@@ -106,7 +106,7 @@ export const FilterBuilder = ({ trigger, isOpen, onOpenChange, fields, appliedFi
                         </Button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-3 border-t border-secondary px-4 py-3">
+                    <div className="flex shrink-0 items-center justify-between gap-3 border-t border-secondary px-4 py-3">
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-medium text-tertiary">
                                 Showing <span className="font-semibold text-primary">{count}</span> of {totalCount}
