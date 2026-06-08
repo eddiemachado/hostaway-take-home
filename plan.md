@@ -644,5 +644,10 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
 - **Published to GitHub Pages.** Created public repo **eddiemachado/hostaway-take-home**, added a
   Vite `base` (`/hostaway-take-home/`) for prod + a GitHub Actions Pages workflow. Live:
   deck → https://eddiemachado.github.io/hostaway-take-home/site.html ·
-  app → https://eddiemachado.github.io/hostaway-take-home/ . _Note: the task prompt PDF is tracked
-  → it's public; remove if undesired._
+  app → https://eddiemachado.github.io/hostaway-take-home/ .
+- **Post-publish polish.** Removed the task-prompt PDF and **scrubbed it from git history**
+  (filter-branch + force-push); gitignored PDFs. Added `noindex, nofollow` to both HTML entries
+  so the public site isn't search-indexed. Introduced a **shared `SiteHeader`** (project label +
+  Slides/Reservations cross-links + theme toggle) used by both the deck and the app for
+  back-and-forth navigation. **Stripped the Reservations app chrome** (sidebar + topbar) so it
+  focuses on the table + filters; `ListPageTemplate` is now SiteHeader + the content container.
