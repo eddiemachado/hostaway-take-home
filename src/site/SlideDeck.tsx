@@ -263,7 +263,7 @@ export function SlideDeck() {
                 </div>
                 <nav className="flex items-center gap-1.5">
                     <a
-                        href="/"
+                        href={import.meta.env.BASE_URL}
                         target="_blank"
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
                     >
