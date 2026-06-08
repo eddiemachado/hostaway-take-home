@@ -97,8 +97,8 @@ const SaveViewControl = ({ savedViews, canSave, onSave, onDelete }: SaveViewCont
                 <TooltipTrigger
                     aria-label="Save view"
                     className={cx(
-                        // +2px bottom padding over the tabs' pb-2.5 to optically align the icon with the tab text baseline.
-                        "flex shrink-0 cursor-pointer items-center rounded-none px-0.5 pb-3 text-quaternary transition duration-100 ease-linear",
+                        // +1px bottom padding over the tabs' pb-2.5 to optically align the icon with the tab text baseline.
+                        "flex shrink-0 cursor-pointer items-center rounded-none px-0.5 pb-[11px] text-quaternary transition duration-100 ease-linear",
                         "outline-focus-ring hover:text-secondary focus-visible:outline-2 focus-visible:-outline-offset-2",
                     )}
                 >

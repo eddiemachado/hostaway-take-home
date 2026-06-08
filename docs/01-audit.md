@@ -138,11 +138,11 @@ Not only is this metadata useful, it allows us to leverage agents to replace old
 
 # Atomic design
 
-I've used atomic design principles in the past but I've always found them a bit confusing as different people have a different opinion on what's an `atom`, `molucule`, etc. 
+I've used atomic design principles in the past but I've always found them a bit confusing as different people have a different opinion on what's an `atom`, `molecule`, etc. 
 
 `atoms` are identified as things like buttons, inputs, etc. But what makes up the atoms? what do we call the tokens?
 
-`molocules` and `organisms` feel too similar and can lead to lengthy conversations about classification, which really doesn't matter to anyone outside the Design System team.
+`molecules` and `organisms` feel too similar and can lead to lengthy conversations about classification, which really doesn't matter to anyone outside the Design System team.
 
 > **molecules** - relatively simple groups of UI elements functioning together as a unit. For example, a form label, search input, and button can join together to create a search form molecule.
 
@@ -150,7 +150,7 @@ I've used atomic design principles in the past but I've always found them a bit 
 
 What I've found works better is a simpler system that most people are already familiar with:
 
-- **Foundations** - base later that everything is built on
+- **Foundations** - base layer that everything is built on
 - **Components** - reusable elements that are built using foundations
 - **Patterns** - a group of components that work together to create parts of the UI
 - **Templates** - a contextual group of components & patterns usually for performing a specific task or present specific data
@@ -192,7 +192,7 @@ Ultimately, no naming structure is perfect. There will always be edge cases, for
 - is `buttonGroup` a pattern because it's composed of  `buttons`?
 - is `breadcrumbs` a pattern because it's composed of `links`?
 
-You could also split things up and add an **Events** category. Things like `Copy & Paste` or `Close` are things that are used plenty of times within the product. They could live within Patterns, but can be seperated if it makes more sense to the team.
+You could also split things up and add an **Events** category. Things like `Copy & Paste` or `Close` are things that are used plenty of times within the product. They could live within Patterns, but can be separated if it makes more sense to the team.
 
 
 **The real answer is: "Who cares?"**
@@ -209,7 +209,7 @@ Documentation for these white label libraries are really generic, but they're ge
 
 **Designers or Engineers, who needs the documentation?**
 
-A few months ago, I would have told you we needed two seperate sets of documentation to explain our system, but today it's a different story.
+A few months ago, I would have told you we needed two separate sets of documentation to explain our system, but today it's a different story.
 
 Documentation is becoming less and less for humans and more of a context tool. 
 
@@ -217,7 +217,7 @@ Documentation is becoming less and less for humans and more of a context tool.
 
 Documentation has changed from being something people use as a reference to something that builders expect the AI to know by default. **We should bring documentation to where the builders are, not have them go looking for it.**
 
-**Empoweing AI**
+**Empowering AI**
 
 AI will have a hard time understanding when & where to use components if it's not explicitly explained. We need to enable docs that are over explanatory while still ensuring they're human readable.
 
@@ -248,7 +248,7 @@ While this is a super basic overview, it answers a lot of open questions that ma
 
 - Always say what you should & should **not** do. Any gaps will be filled in by the AI
 - When writing, ask the AI if there are any open questions or conflicts before publishing
-- Code samples and implentation examples are the **most valuable**
+- Code samples and implementation examples are the **most valuable**
 - Create an agent to manage documentation drift when new features or updates are done
 
 ---
@@ -257,13 +257,13 @@ While this is a super basic overview, it answers a lot of open questions that ma
 
 There are many projects now that propose having a DESIGN.md file that outlines your design system and design language. In my experience, this can be super useful but also doesn't solve the complete problem.
 
-**AI can often ignore reccomendations in this file or they can easily become stale over time, causing more trouble.**
+**AI can often ignore recommendations in this file or they can easily become stale over time, causing more trouble.**
 
-Instead, I like to treat is as a directory for where to look to find answers.
+Instead, I like to treat it as a directory for where to look to find answers.
 
 **Design Principles**
 
-Guide the AI with some orverarching principles based on Hostaway's design language (these are placeholders).
+Guide the AI with some overarching principles based on Hostaway's design language (these are placeholders).
 
 ```md
 ## Design principles
@@ -347,9 +347,6 @@ We don't want the AI to ever hallucinate or guess, if we've got all the elements
   System team so it's added once, for everyone — not solved ad hoc on your screen.
 - **Match the conventions below.** New work should be indistinguishable from existing work.
 ```
-
-
-
 
 **Where our Design system lives**
 
