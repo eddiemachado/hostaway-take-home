@@ -4,7 +4,7 @@ It's really difficult to come up with a clear plan without really understanding 
 
 ---
 
-# Pre-requisites
+**Pre-requisites:**
 
 **We need to decide, along with Engineering leadership, what our tech stack should be.** The Design System needs to align with the product, engineering, and design vision. Especially as role boundaries are changing, we need alignment more than ever.
 

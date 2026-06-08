@@ -1,9 +1,3 @@
-# Untitled UI Audit
-
-> Diagnose what’s wrong with the components as they exist today. Where does the current
-organism-based, Untitled-UI-lifted approach break down? What doesn’t scale, what can’t be reused,
-and what’s missing in terms of structure and documentation? Show us how you read the situation.
-
 # Untitled UI as a baseline
 
 When using these libraries, specifically Untitled UI, it's not a plug and play solution. It offers the main benefit of getting you up quickly, but you still need to do the work to get it to _**feel**_ like Hostaway.
@@ -259,6 +253,36 @@ While this is a super basic overview, it answers a lot of open questions that ma
 
 ---
 
+# Leveraging Agents
+
+Once we have documentation and our foundations in place, agents stop being a gimmick and start doing real work. That documentation becomes instructional material for agents to take action and keep our system running.
+
+**Expanding the team:**
+
+- **Doc maintenance:** — When we update components, this agent reviews the PR and updates our documentation based on recent changes. This way we never have stale documentation.
+
+- **Token updater:** Reads our token data and the codebase to find deprecated tokens and create PRs updating them to the right tokens.
+
+- **Auditor:** Scans the codebase for hardcoded values or custom code that could be using our DS assets. This doesn't fix anything, just locates it so other agents can.
+
+- **Bug fixer:** Picks up any tasks labeled with `AI-ready` and automatically fixes them and creates a PR. This allows us to work in tandem with AI to improve our codebase.
+
+- **a11y reviewer:** Review any severe accessibility issues that can be fixed using our DS. 
+
+**Not everything needs an LLM.**
+
+We don't want to ever run into a situation where we run out of tokens and are blocked from doing any work. This is why we want the agents to be supportive but never a blocker.
+
+**Keep it tool-agnostic.**
+
+The instructions for these agents live as plain markdown prompt files in the repo, so any assistant (Claude, ChatGPT, Hermes, etc) can use them. This way we're not married into an ecosystem.
+
+**Guardrails matter.**
+
+Give each agent the least access it needs: the doc writer only touches docs, drift detection is read-only, and the migration agent opens a PR. Targeted, focused, and never overreaching. This way we know what to expect, always.
+
+---
+
 # Working example — Page header
 
 The `PageHeader` is actually a really great `Pattern` to have, we just need to make it ours and we absolutely need to ensure it's using our `components` within.
@@ -266,20 +290,37 @@ The `PageHeader` is actually a really great `Pattern` to have, we just need to m
 Out of the box, it actually supports different customizations. For example, here's the full `PageHeader`:
 
 ```ts
-<PageHeader 
-  title="Reservations" 
-  description="Manage bookings across every channel."
-  actions={...} 
-  tabs={...}
-  />
+<PageHeader
+  title="Page title"
+  description="Short description of the page"
+  actions={
+  <>
+    <Button color="secondary" size="md" iconLeading={UploadCloud02}>
+      Import
+    </Button>
+    <Button color="primary" size="md" iconLeading={Plus}>
+      New reservation
+    </Button>
+  </>
+  }
+  tabs={
+    <Tabs selectedKey={tab} onSelectionChange={(key: Key) => setTab(String(key))}>
+      <Tabs.List type="underline" aria-label="Reservation views">
+        <Tabs.Item id="all" label="All" badge={36} />
+        <Tabs.Item id="upcoming" label="Upcoming" badge={14} />
+        <Tabs.Item id="cancelled" label="Cancelled" badge={7} />
+      </Tabs.List>
+    </Tabs>
+  }
+/>
 ```
 
 You can remove the buttons by removing the actions prop:
 
 ```ts
 <PageHeader 
-  title="Reservations" 
-  description="Manage bookings across every channel."
+  title="Page title" 
+  description="Short description of the page"
   tabs={...} 
 />
 ```
@@ -287,41 +328,61 @@ You can remove the buttons by removing the actions prop:
 You can remove the tabs by removing the tabs prop:
 ```ts
 <PageHeader 
-  title="Reservations" 
-  description="Manage bookings across every channel."
+  title="Page title" 
+  description="Short description of the page"
   actions={...} 
 />
 ```
 
-Now, instead of using the `primary` | `secondary` variants, we can wrap common configurations as `Templates`.
+Now, instead of using the `primary` | `secondary` | `tertiary` | `quarternary` variants, we can wrap a common configurations as a `Template`.
 
-So for the Reservation Page we could create a Template that has all the configured `components` and `patterns`:
+So for the Reservation Page we could create a Template that has all the configured settings:
 
 ```ts
-// page header
-<PageHeader 
-  title="Reservations" 
-  description="Manage bookings across every channel."
-  actions={...} 
-/>
-// filter bar
-<FilterBar
-  prop="value"
-/>
-// reservation table
-<Table 
-  prop="value"
-/>
+export function ReservationsHeader({
+    ... 
+    // all the stuff to make it pass data through is here
+    {
+    return (
+        <PageHeader
+            title="Reservations"
+            description="Manage bookings across every channel."
+            actions={
+                <>
+                    <Button color="secondary" size="md" iconLeading={UploadCloud02} onPress={onImport}>Import</Button>
+                    <Button color="primary" size="md" iconLeading={Plus} onPress={onCreate}>New reservation</Button>
+                </>
+            }
+            tabs={
+                <Tabs selectedKey={tab} onSelectionChange={(k: Key) => setTab(String(k))}>
+                    <Tabs.List type="underline" aria-label="Reservation views">
+                        <Tabs.Item id="all" label="All" badge={counts.all} />
+                        <Tabs.Item id="upcoming" label="Upcoming" badge={counts.upcoming} />
+                        <Tabs.Item id="cancelled" label="Cancelled" badge={counts.cancelled} />
+                    </Tabs.List>
+                </Tabs>
+            }
+        />
+    );
+}
 ```
 
-This way, when I load a template: `TemplateReservation` it has all these things already preconfigured. If changes are made in the future, everything is connected.
+This way, when I load a template: `ReservationsHeader` it has all these things already preconfigured. If changes are made in the future, everything is connected.
 
-**A change in the button is reflected in:**
-- inside the `ButtonGroup`
-- inside the `PageHeader`
-- inside the `FilterBar`
-- inside the `Table`
+```ts
+// you can wrap all your custom settings and just call the ReservationsHeader
+<ReservationsHeader counts={{ all: 36, upcoming: 14, cancelled: 7 }} onCreate={openCreateModal} />
+```
 
-Everything is connected and updated.
+**If a change in the primary color of the button is needed...**
+
+1. the token `button-background-primary` is changed and published
+2. this token change is reflected in the `primary` variant of the `Button`
+3. the `primary` variant is updated inside the `ButtonGroup`
+4. the `ButtonGroup` is updated inside the `PageHeader`
+5. the `Button` is updated inside the `FilterBar`
+6. the `Button` is inside the `Table`
+
+Everything is connected and updated just based on one value change, with *no code changes needed*. 
 
 ---
