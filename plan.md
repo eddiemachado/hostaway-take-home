@@ -674,3 +674,10 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   swapped (Add filter left, 300px search right). Verified end-to-end via Playwright (filter persists
   across system tabs; saved-view filters clear on leaving; single active tab through every path;
   save/scroll/tooltip).
+- **Root `DESIGN.md` entry point.** Added a directory-style `DESIGN.md` (the convention of
+  `AGENTS.md`/`llms.txt`): a map, not the manual. It documents how to use/install the
+  `hostaway-design-system` MCP, where each layer lives (repo path + MCP call), six Untitled-UI-spirit
+  **design principles**, and a **"build with the system — don't reinvent"** guardrail (search first,
+  no net-new one-offs/third-party UI, extend don't fork). Replaced an earlier inline
+  `02-design-language.md` draft, which was the wrong shape (it tried to *be* the reference rather than
+  point to it). Also removed the deck header's section **kicker** chip (e.g. "AUDIT").

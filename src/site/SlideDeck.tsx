@@ -246,7 +246,7 @@ export function SlideDeck() {
 
     return (
         <div className="flex h-screen flex-col bg-primary">
-            <SiteHeader current="slides" kicker={slide.kind === "title" ? undefined : slide.kind === "wrapup" ? "Wrap-up" : slide.section} elevated={edges.top} />
+            <SiteHeader current="slides" elevated={edges.top} />
 
             {/* slide — `main` is the scroll container; the slide never clips (margin:auto keeps it
                 centered when short, scrolls from the top when tall). */}

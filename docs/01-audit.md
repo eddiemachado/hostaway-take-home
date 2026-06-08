@@ -253,6 +253,123 @@ While this is a super basic overview, it answers a lot of open questions that ma
 
 ---
 
+# DESIGN.md
+
+There are many projects now that propose having a DESIGN.md file that outlines your design system and design language. In my experience, this can be super useful but also doesn't solve the complete problem.
+
+**AI can often ignore reccomendations in this file or they can easily become stale over time, causing more trouble.**
+
+Instead, I like to treat is as a directory for where to look to find answers.
+
+**Design Principles**
+
+Guide the AI with some orverarching principles based on Hostaway's design language (these are placeholders).
+
+```md
+## Design principles
+
+The ethos we inherit from Untitled UI and hold ourselves to. When a decision is ambiguous, these
+break the tie.
+
+1. **Clarity over cleverness.** The obvious solution wins. Interfaces should be understood at a
+   glance — never make someone decode a control.
+2. **Content leads, chrome follows.** Minimal borders, restrained colour, generous space. The UI
+   recedes so the data (reservations, guests, money) is what stands out.
+3. **Consistent by default.** There is one right way to do a thing. Same spacing scale, same tokens,
+   same patterns everywhere — predictability is a feature.
+4. **Accessible, always.** WCAG AA contrast, full keyboard paths, visible focus, labelled controls.
+   Built on React Aria; accessibility is the floor, not an add-on.
+5. **Composable, not bespoke.** Small pieces snap together. We extend through slots and tokens, not
+   one-off variants or forks.
+6. **Tokens are the contract.** Look and feel lives in tokens, behaviour lives in components. Restyle
+   by changing tokens — never by editing component internals.
+```
+
+**MCP & tooling**
+
+First we want to ensure that AI understands what tools to use to get the information. If there's an MCP, we outline how to use the MCP and get the data it needs.
+
+```md
+
+## The MCP (source of truth)
+
+The system is exposed over an MCP server, `hostaway-design-system`. Prefer it over reading source —
+it returns current props, variants, import paths, token values, and usage rules.
+
+**Tools**
+
+`list_components()` - list every Component + one-line description 
+`get_component(name)` - full API for a Component: props, types, variants, import path, example, a11y notes 
+`list_patterns()` - list Patterns (PageHeader, FilterBuilder, ViewTabs, …) 
+`get_pattern(name)` - a Pattern's slots, composition, props, and example 
+`search_tokens(query, category?)` - find tokens by name/category (`color`, `spacing`, `radius`, `typography`) 
+`get_token(name)` - resolve one token: value, `usage`, `avoid`, `deprecated`/`replaceWith`, scope 
+
+**Workflow:** unsure of a name → `list_components` / `list_patterns` first, then `get_*`. If
+`get_component` returns null the component doesn't exist — compose from primitives + tokens, don't
+reach for a third-party lib. If a token is `deprecated`, use its `replaceWith`.
+
+**If the MCP isn't connected,** add it to your Claude Code MCP settings (`~/.claude/settings.json`)
+and replace the placeholders:
+
+{
+  "mcpServers": {
+    "hostaway-design-system": {
+      "type": "http",
+      "url": "https://design.hostaway.com/api/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-access-token>",
+        "X-User-Email": "you@hostaway.com"
+      }
+    }
+  }
+}
+```
+
+**General guardrails**
+
+We don't want the AI to ever hallucinate or guess, if we've got all the elements it needs to build out UI.
+
+```md
+## Build with the system — don't reinvent
+
+> **Default to the system. Do not introduce new elements.** Before you build anything, assume it
+> already exists and go find it.
+
+- **Search first.** `list_components` / `list_patterns` (or Storybook) before writing any UI. Nine
+  times out of ten the thing exists — use it.
+- **No net-new one-offs.** Don't hand-roll a button, input, modal, chip, etc. Don't pull in a
+  third-party UI library. If a primitive is truly missing, compose it from existing
+  Components + tokens.
+- **Extend, don't fork.** Need a tweak? Add a token or use a Pattern's slot. Never copy a component
+  to modify it — that's how variant sprawl and drift start.
+- **Gap → propose, don't patch.** If the system genuinely lacks something, raise it with the Design
+  System team so it's added once, for everyone — not solved ad hoc on your screen.
+- **Match the conventions below.** New work should be indistinguishable from existing work.
+```
+
+
+
+
+**Where our Design system lives**
+
+Then we want to point to where our tokens, components, patterns, etc live so it doesn't have to waste tokens searching for answers.
+
+```md
+## Where things live
+
+**Foundations** (tokens) - [`src/styles/`](src/foundations/) | `search_tokens`, `get_token` 
+**Components** - [`src/components/base/`](src/components/) | `list_components`, `get_component` 
+**Patterns** - [`src/organisms/`](src/patterns/) | `list_patterns`, `get_pattern` 
+**Templates** - [`src/templates/`](src/templates/) | — read source 
+**Pages** - [`src/pages/`](src/pages/) | — read source 
+
+```
+
+Essentially, if we put some base rules here that change very infrequently and point it to the data that does change frequently, then it's unlikely to get stale and the system will run smoother.
+
+---
+
 # Leveraging Agents
 
 Once we have documentation and our foundations in place, agents stop being a gimmick and start doing real work. That documentation becomes instructional material for agents to take action and keep our system running.
