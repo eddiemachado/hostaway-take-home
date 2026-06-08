@@ -154,6 +154,12 @@
     font-size: 0.75rem;
     font-weight: 700;
 }
+/* Zero the loose-list paragraph margins so the title sits on the line the number is
+   centered on (otherwise the prose top-margin drops the title below the circle). */
+.roadmap-prose ol > li > * {
+    margin-top: 0;
+    margin-bottom: 0;
+}
 .roadmap-prose ol > li strong {
     display: block;
     margin-bottom: 0.15rem;
