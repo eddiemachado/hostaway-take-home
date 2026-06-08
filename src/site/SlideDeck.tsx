@@ -3,8 +3,9 @@ import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ArrowLeft, ArrowRight, Moon01, Sun } from "@untitledui/icons";
+import { ArrowLeft, ArrowRight } from "@untitledui/icons";
 import { useTheme } from "@/providers/theme-provider";
+import { SiteHeader } from "@/shared/SiteHeader";
 // Rendered verbatim from the source docs — split into slides structurally, never edited.
 import auditContent from "../../docs/01-audit.md?raw";
 import roadmapContent from "../../docs/roadmap.md?raw";
@@ -159,7 +160,7 @@ function WrapUp() {
 }
 
 export function SlideDeck() {
-    const { theme, setTheme } = useTheme();
+    const { theme } = useTheme();
     const isDark = theme === "dark";
     const [index, setIndex] = useState(0);
     const total = SLIDES.length;
@@ -245,41 +246,7 @@ export function SlideDeck() {
 
     return (
         <div className="flex h-screen flex-col bg-primary">
-            {/* top chrome */}
-            <header
-                className={`z-10 flex h-14 shrink-0 items-center justify-between bg-primary px-5 transition-shadow duration-200 ${
-                    edges.top ? "border-b border-secondary shadow-[0_8px_16px_-12px_rgba(10,13,18,0.12)]" : "border-b border-transparent"
-                }`}
-            >
-                <div className="flex items-center gap-2.5">
-                    <span className="text-sm font-semibold text-primary">
-                        Eddie Machado <span className="text-tertiary">- Hostaway task</span>
-                    </span>
-                    {slide.kind !== "title" && (
-                        <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold tracking-wide text-tertiary uppercase">
-                            {slide.kind === "wrapup" ? "Wrap-up" : slide.section}
-                        </span>
-                    )}
-                </div>
-                <nav className="flex items-center gap-1.5">
-                    <a
-                        href={import.meta.env.BASE_URL}
-                        target="_blank"
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
-                    >
-                        Reservations
-                    </a>
-                    <span className="mx-1 h-5 w-px bg-border-secondary" aria-hidden="true" />
-                    <button
-                        type="button"
-                        onClick={() => setTheme(isDark ? "light" : "dark")}
-                        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                        className="inline-flex size-9 items-center justify-center rounded-lg border border-primary bg-primary text-fg-quaternary shadow-xs transition duration-150 ease-out hover:bg-primary_hover hover:text-fg-quaternary_hover active:scale-95"
-                    >
-                        {isDark ? <Sun className="size-5" /> : <Moon01 className="size-5" />}
-                    </button>
-                </nav>
-            </header>
+            <SiteHeader current="slides" kicker={slide.kind === "title" ? undefined : slide.kind === "wrapup" ? "Wrap-up" : slide.section} elevated={edges.top} />
 
             {/* slide — `main` is the scroll container; the slide never clips (margin:auto keeps it
                 centered when short, scrolls from the top when tall). */}

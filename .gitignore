@@ -25,3 +25,7 @@ dist-ssr
 
 *storybook.log
 storybook-static
+
+# Take-home prompt (kept out of the public repo)
+Staff_Product_Designer_-_DS-_Home_task_1.pdf
+*.pdf

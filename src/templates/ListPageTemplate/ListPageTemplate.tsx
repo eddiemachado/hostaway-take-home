@@ -1,9 +1,5 @@
-import type { FC, ReactNode } from "react";
-import { Bell01, Building02, CalendarCheck01, LayoutAlt01, Moon01, Settings01, Sun, User01 } from "@untitledui/icons";
-import { Avatar } from "@/components/base/avatar/avatar";
-import { Button } from "@/components/base/buttons/button";
-import { useTheme } from "@/providers/theme-provider";
-import { cx } from "@/utils/cx";
+import { useCallback, useRef, useState, type ReactNode } from "react";
+import { SiteHeader } from "@/shared/SiteHeader";
 
 export interface ListPageTemplateProps {
     /** Page header slot (e.g. <PageHeader />). */
@@ -18,72 +14,23 @@ export interface ListPageTemplateProps {
     footer?: ReactNode;
 }
 
-const NAV: { label: string; icon: FC<{ className?: string }>; active?: boolean }[] = [
-    { label: "Dashboard", icon: LayoutAlt01 },
-    { label: "Reservations", icon: CalendarCheck01, active: true },
-    { label: "Listings", icon: Building02 },
-    { label: "Guests", icon: User01 },
-    { label: "Settings", icon: Settings01 },
-];
-
-function ThemeToggle() {
-    const { theme, setTheme } = useTheme();
-    const isDark = theme === "dark";
-    return (
-        <Button
-            color="tertiary"
-            size="sm"
-            iconLeading={isDark ? Sun : Moon01}
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            onPress={() => setTheme(isDark ? "light" : "dark")}
-        />
-    );
-}
-
 /**
- * Application shell + list-page layout. Named slots (header / toolbar / filters / content /
- * footer) keep the *page* free of chrome concerns — the template owns structure, the page
- * owns content. (Atomic design: template → page.)
+ * List-page layout. Chrome is just the shared SiteHeader (for navigating to the deck); the rest
+ * of the screen is the focused content container — page header, toolbar, filters, table,
+ * pagination. No app sidebar/topbar: this exercise is about the table + filters.
  */
-export const ListPageTemplate = ({ header, toolbar, filters, children, footer }: ListPageTemplateProps) => (
-    <div className="flex h-screen bg-secondary">
-        {/* Sidebar */}
-        <aside className="hidden w-64 shrink-0 flex-col gap-1 border-r border-secondary bg-primary px-4 py-6 md:flex">
-            <div className="mb-6 flex items-center gap-2 px-2">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white">H</span>
-                <span className="text-lg font-semibold text-primary">Hostaway</span>
-            </div>
-            <nav className="flex flex-col gap-1">
-                {NAV.map((item) => (
-                    <a
-                        key={item.label}
-                        href="#"
-                        aria-current={item.active ? "page" : undefined}
-                        className={cx(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition",
-                            item.active ? "bg-active text-secondary" : "text-tertiary hover:bg-primary_hover hover:text-secondary",
-                        )}
-                    >
-                        <item.icon className="size-5 shrink-0" />
-                        {item.label}
-                    </a>
-                ))}
-            </nav>
-        </aside>
+export const ListPageTemplate = ({ header, toolbar, filters, children, footer }: ListPageTemplateProps) => {
+    const scrollRef = useRef<HTMLElement>(null);
+    const [elevated, setElevated] = useState(false);
+    const onScroll = useCallback(() => {
+        const el = scrollRef.current;
+        if (el) setElevated(el.scrollTop > 2);
+    }, []);
 
-        {/* Main column */}
-        <div className="flex min-w-0 flex-1 flex-col">
-            {/* Topbar */}
-            <div className="flex h-16 shrink-0 items-center justify-end gap-1 border-b border-secondary bg-primary px-6">
-                <ThemeToggle />
-                <Button color="tertiary" size="sm" iconLeading={Bell01} aria-label="Notifications" />
-                <span className="ml-2">
-                    <Avatar size="sm" alt="Ava Reyes" initials="AR" />
-                </span>
-            </div>
-
-            {/* Scrollable content */}
-            <main className="flex-1 overflow-auto">
+    return (
+        <div className="flex h-screen flex-col bg-secondary">
+            <SiteHeader current="reservations" elevated={elevated} />
+            <main ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-auto">
                 <div className="mx-auto flex max-w-[1280px] flex-col gap-6 px-6 py-8">
                     {header}
                     {(toolbar || filters) && (
@@ -97,5 +44,5 @@ export const ListPageTemplate = ({ header, toolbar, filters, children, footer }:
                 </div>
             </main>
         </div>
-    </div>
-);
+    );
+};
