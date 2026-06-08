@@ -3,7 +3,7 @@ import Markdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ArrowLeft, ArrowRight, ArrowUpRight, LinkExternal01, Moon01, Sun } from "@untitledui/icons";
+import { ArrowLeft, ArrowRight, Moon01, Sun } from "@untitledui/icons";
 import { useTheme } from "@/providers/theme-provider";
 // Rendered verbatim from the source docs — split into slides structurally, never edited.
 import auditContent from "../../docs/01-audit.md?raw";
@@ -40,12 +40,13 @@ const AUDIT_SLIDES = splitSlides(auditContent);
 const ROADMAP_SLIDES = splitSlides(roadmapContent);
 const ROADMAP_TITLE = roadmapContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Roadmap";
 
-type Slide = { kind: "title" } | { kind: "overview" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
+type Slide = { kind: "title" } | { kind: "overview" } | { kind: "wrapup" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
 const SLIDES: Slide[] = [
     { kind: "title" },
     ...AUDIT_SLIDES.map((md) => ({ kind: "md" as const, section: "Audit" as const, md })),
     { kind: "overview" },
     ...ROADMAP_SLIDES.map((md) => ({ kind: "md" as const, section: "Roadmap" as const, md })),
+    { kind: "wrapup" },
 ];
 
 /** Phases that carry a `Month:` — drives the overview timeline (title + month from the doc). */
@@ -137,6 +138,38 @@ function RoadmapOverview() {
     );
 }
 
+/** Closing summary of the whole presentation (audit → system → roadmap). */
+function WrapUp() {
+    const cards = [
+        { k: "The problem", v: "Untitled UI got us moving fast, but it isn't a system yet — no single source of truth, no owned docs, and Tailwind leaves no clear answer." },
+        { k: "The approach", v: "Own the foundations as tokens, keep a simple vocabulary (Foundations · Components · Patterns · Templates), and write docs for humans and AI so change propagates." },
+        { k: "The plan", v: "Audit → foundations & tokens → build components & patterns → migration & governance, with agents and workflows keeping us aligned as we build." },
+    ];
+    return (
+        <div className="py-6">
+            <h2 className="mb-3 text-display-sm font-semibold text-primary">Wrapping up</h2>
+            <p className="mb-8 max-w-2xl text-lg text-tertiary">
+                The goal isn't to throw away Untitled UI — it's to make it ours: a system that feels like Hostaway and scales.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+                {cards.map((c) => (
+                    <div key={c.k} className="rounded-xl border border-secondary bg-secondary p-5">
+                        <h3 className="mb-2 text-xs font-semibold tracking-wide text-brand-secondary uppercase">{c.k}</h3>
+                        <p className="text-sm text-tertiary">{c.v}</p>
+                    </div>
+                ))}
+            </div>
+            <div className="mt-6 flex items-start gap-3 rounded-xl bg-secondary p-5">
+                <span className="mt-1.5 size-2 shrink-0 rounded-full bg-brand-solid" aria-hidden="true" />
+                <p className="text-md font-medium text-primary">
+                    The outcome: a token-driven, AI-enabled, documented system — restyled by changing tokens, not code.
+                </p>
+            </div>
+            <p className="mt-8 text-md text-tertiary">Thanks for reading — happy to dig into any part of this.</p>
+        </div>
+    );
+}
+
 export function SlideDeck() {
     const { theme, setTheme } = useTheme();
     const isDark = theme === "dark";
@@ -208,25 +241,18 @@ export function SlideDeck() {
                 <div className="flex items-center gap-2.5">
                     <span className="flex size-7 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white" aria-hidden="true">H</span>
                     {slide.kind !== "title" && (
-                        <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">{slide.kind === "overview" ? "Roadmap" : slide.section}</span>
+                        <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">
+                            {slide.kind === "overview" ? "Roadmap" : slide.kind === "wrapup" ? "Wrap-up" : slide.section}
+                        </span>
                     )}
                 </div>
                 <nav className="flex items-center gap-1.5">
                     <a
                         href="/"
+                        target="_blank"
                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
                     >
                         Reservations
-                        <ArrowUpRight className="size-4 text-fg-quaternary" />
-                    </a>
-                    <a
-                        href="http://localhost:6007/"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-secondary transition duration-150 ease-out hover:bg-primary_hover active:scale-95"
-                    >
-                        Storybook
-                        <LinkExternal01 className="size-4 text-fg-quaternary" />
                     </a>
                     <span className="mx-1 h-5 w-px bg-border-secondary" aria-hidden="true" />
                     <button
@@ -255,8 +281,16 @@ export function SlideDeck() {
                         </div>
                     ) : slide.kind === "overview" ? (
                         <RoadmapOverview />
+                    ) : slide.kind === "wrapup" ? (
+                        <WrapUp />
                     ) : (
-                        <div className={slide.section === "Roadmap" ? "prose roadmap-prose" : "prose"}>
+                        <div
+                            className={
+                                slide.section === "Roadmap"
+                                    ? `prose roadmap-prose${/measure success/i.test(slide.md) ? " metrics" : ""}`
+                                    : "prose"
+                            }
+                        >
                             <Markdown remarkPlugins={[remarkGfm]} components={slide.section === "Roadmap" ? roadmapComponents : components}>
                                 {slide.md}
                             </Markdown>

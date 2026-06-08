@@ -199,6 +199,27 @@
     font-weight: 700;
 }
 
+/* "How we'll measure success" → 2×2 grid of metric cards (bold label + description). */
+.roadmap-prose.metrics > ul {
+    list-style: none;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.roadmap-prose.metrics > ul > li {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-secondary);
+    border-radius: 0.625rem;
+    color: var(--color-text-tertiary);
+}
+.roadmap-prose.metrics > ul > li strong {
+    color: var(--color-text-primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .deck-slide,
     .deck-slide .prose > * {
