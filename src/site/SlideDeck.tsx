@@ -230,8 +230,9 @@ export function SlideDeck() {
         return () => window.removeEventListener("keydown", onKey);
     }, [next, prev, goTo, total]);
 
-    // Recompute edges when the slide changes (content height differs) and on resize.
+    // On slide change: jump the scroller back to the top, then recompute edges (and on resize).
     useEffect(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = 0;
         const id = requestAnimationFrame(updateEdges);
         window.addEventListener("resize", updateEdges);
         return () => {
@@ -278,14 +279,10 @@ export function SlideDeck() {
                 </nav>
             </header>
 
-            {/* slide */}
-            <main className="flex min-h-0 flex-1 items-center justify-center px-5 pb-4">
-                <div
-                    key={index}
-                    ref={scrollRef}
-                    onScroll={updateEdges}
-                    className="deck-slide flex max-h-full w-full max-w-3xl flex-col overflow-y-auto px-4 py-2"
-                >
+            {/* slide — `main` is the scroll container; the slide never clips (margin:auto keeps it
+                centered when short, scrolls from the top when tall). */}
+            <main ref={scrollRef} onScroll={updateEdges} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
+                <div key={index} className="deck-slide mx-auto my-auto w-full max-w-3xl px-1 py-4">
                     {slide.kind === "title" ? (
                         <div className="py-10">
                             <h1 className="text-display-2xl font-semibold leading-tight text-primary">Eddie Machado</h1>
