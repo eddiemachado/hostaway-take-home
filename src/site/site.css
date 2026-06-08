@@ -109,17 +109,23 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
-.roadmap-prose .rm-month::before {
-    content: "";
+/* Traveling rail "bead" — follows the pointer / scroll up & down the rail (positioned via JS). */
+.rail-dot {
     position: absolute;
-    left: calc(-1.75rem - 2px);
-    top: 50%;
-    transform: translate(-50%, -50%);
+    left: 1px;
+    top: 0;
     width: 0.75rem;
     height: 0.75rem;
     border-radius: 9999px;
     background: var(--color-bg-brand-solid);
     box-shadow: 0 0 0 4px var(--color-bg-primary);
+    pointer-events: none;
+    transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+    .rail-dot {
+        transition: none;
+    }
 }
 
 /* Goal → highlighted lead line. */

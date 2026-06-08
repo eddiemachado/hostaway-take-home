@@ -38,22 +38,14 @@ function splitSlides(md: string): string[] {
 
 const AUDIT_SLIDES = splitSlides(auditContent);
 const ROADMAP_SLIDES = splitSlides(roadmapContent);
-const ROADMAP_TITLE = roadmapContent.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? "Roadmap";
 
-type Slide = { kind: "title" } | { kind: "overview" } | { kind: "wrapup" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
+type Slide = { kind: "title" } | { kind: "wrapup" } | { kind: "md"; section: "Audit" | "Roadmap"; md: string };
 const SLIDES: Slide[] = [
     { kind: "title" },
     ...AUDIT_SLIDES.map((md) => ({ kind: "md" as const, section: "Audit" as const, md })),
-    { kind: "overview" },
     ...ROADMAP_SLIDES.map((md) => ({ kind: "md" as const, section: "Roadmap" as const, md })),
     { kind: "wrapup" },
 ];
-
-/** Phases that carry a `Month:` — drives the overview timeline (title + month from the doc). */
-const PHASES = ROADMAP_SLIDES.map((md) => ({
-    title: md.match(/^#{1,3}\s+(.+)$/m)?.[1]?.trim() ?? "",
-    month: md.match(/\*\*Month:\*\*\s*(.+)/)?.[1]?.trim() ?? null,
-})).filter((p): p is { title: string; month: string } => p.month != null);
 
 /** Read a paragraph's leading `**Label:**` (e.g. "Month:", "Goal:", "Milestone:") if present. */
 function leadingStrongLabel(node: unknown): string {
@@ -135,27 +127,6 @@ function makeMetricsComponents(base: Components): Components {
     };
 }
 
-/** At-a-glance horizontal timeline of the phased months (overview slide). */
-function RoadmapOverview() {
-    return (
-        <div className="py-6">
-            <h2 className="mb-10 text-display-sm font-semibold text-primary">{ROADMAP_TITLE}</h2>
-            <div className="relative flex justify-between gap-3">
-                <div className="absolute inset-x-3 top-3 h-0.5 bg-border-secondary" aria-hidden="true" />
-                {PHASES.map((p, i) => (
-                    <div key={p.title} className="relative flex flex-1 flex-col items-start gap-2">
-                        <span className="z-10 flex size-6 items-center justify-center rounded-full bg-brand-solid text-xs font-bold text-white ring-4 ring-[var(--color-bg-primary)]">
-                            {i + 1}
-                        </span>
-                        <span className="text-xs font-semibold tracking-wide text-brand-secondary uppercase">Month {p.month}</span>
-                        <span className="text-sm font-medium text-primary">{p.title}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
 /** Closing summary of the whole presentation (audit → system → roadmap). */
 function WrapUp() {
     const cards = [
@@ -208,6 +179,35 @@ export function SlideDeck() {
         setEdges((prev) => (prev.top === top && prev.bottom === bottom ? prev : { top, bottom }));
     }, []);
 
+    // Timeline "bead": on phase slides, the rail node follows the pointer (and tracks scroll)
+    // up/down the rail. Driven via direct transform (no re-render); CSS eases it into a spring follow.
+    const phaseRef = useRef<HTMLDivElement>(null);
+    const dotRef = useRef<HTMLSpanElement>(null);
+    const pointerY = useRef<number | null>(null);
+    const positionBead = useCallback(() => {
+        const wrap = phaseRef.current;
+        const dot = dotRef.current;
+        if (!wrap || !dot || pointerY.current == null) return;
+        const rect = wrap.getBoundingClientRect();
+        const y = Math.max(0, Math.min(pointerY.current - rect.top, rect.height));
+        dot.style.transform = `translate(-50%, -50%) translateY(${y}px)`;
+    }, []);
+    const onMainScroll = useCallback(() => {
+        updateEdges();
+        positionBead();
+    }, [updateEdges, positionBead]);
+    const onMainPointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            pointerY.current = e.clientY;
+            positionBead();
+        },
+        [positionBead],
+    );
+    const onMainPointerLeave = useCallback(() => {
+        pointerY.current = null;
+        if (dotRef.current) dotRef.current.style.transform = "translate(-50%, -50%) translateY(0px)";
+    }, []);
+
     const goTo = useCallback((n: number) => setIndex(() => Math.min(total - 1, Math.max(0, n))), [total]);
     const next = useCallback(() => setIndex((i) => Math.min(total - 1, i + 1)), [total]);
     const prev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), [total]);
@@ -252,10 +252,12 @@ export function SlideDeck() {
                 }`}
             >
                 <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-brand-solid text-sm font-bold text-white" aria-hidden="true">H</span>
+                    <span className="text-sm font-semibold text-primary">
+                        Eddie Machado <span className="text-tertiary">- Hostaway task</span>
+                    </span>
                     {slide.kind !== "title" && (
-                        <span className="text-xs font-semibold tracking-wide text-tertiary uppercase">
-                            {slide.kind === "overview" ? "Roadmap" : slide.kind === "wrapup" ? "Wrap-up" : slide.section}
+                        <span className="ml-1 rounded-md bg-secondary px-2 py-0.5 text-xs font-semibold tracking-wide text-tertiary uppercase">
+                            {slide.kind === "wrapup" ? "Wrap-up" : slide.section}
                         </span>
                     )}
                 </div>
@@ -281,15 +283,19 @@ export function SlideDeck() {
 
             {/* slide — `main` is the scroll container; the slide never clips (margin:auto keeps it
                 centered when short, scrolls from the top when tall). */}
-            <main ref={scrollRef} onScroll={updateEdges} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4">
+            <main
+                ref={scrollRef}
+                onScroll={onMainScroll}
+                onPointerMove={onMainPointerMove}
+                onPointerLeave={onMainPointerLeave}
+                className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-4"
+            >
                 <div key={index} className="deck-slide mx-auto my-auto w-full max-w-3xl px-1 py-4">
                     {slide.kind === "title" ? (
                         <div className="py-10">
                             <h1 className="text-display-2xl font-semibold leading-tight text-primary">Eddie Machado</h1>
                             <p className="mt-4 text-xl text-tertiary">Staff designer - Design systems</p>
                         </div>
-                    ) : slide.kind === "overview" ? (
-                        <RoadmapOverview />
                     ) : slide.kind === "wrapup" ? (
                         <WrapUp />
                     ) : (
@@ -305,8 +311,20 @@ export function SlideDeck() {
                             }
                             const isPhase = /\*\*Month:\*\*/.test(slide.md);
                             const isMetrics = /measure success/i.test(slide.md);
+                            if (isPhase) {
+                                return (
+                                    <div ref={phaseRef} className="relative">
+                                        <span ref={dotRef} className="rail-dot" style={{ transform: "translate(-50%, -50%) translateY(0px)" }} aria-hidden="true" />
+                                        <div className="prose roadmap-prose phase">
+                                            <Markdown remarkPlugins={[remarkGfm]} components={roadmapComponents}>
+                                                {slide.md}
+                                            </Markdown>
+                                        </div>
+                                    </div>
+                                );
+                            }
                             return (
-                                <div className={`prose roadmap-prose${isPhase ? " phase" : ""}${isMetrics ? " metrics" : ""}`}>
+                                <div className={`prose roadmap-prose${isMetrics ? " metrics" : ""}`}>
                                     <Markdown remarkPlugins={[remarkGfm]} components={isMetrics ? metricsComponents : roadmapComponents}>
                                         {slide.md}
                                     </Markdown>
