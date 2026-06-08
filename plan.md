@@ -636,3 +636,13 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   eng + AI). Grounded in the audit's positions: token metadata, Foundations/Components/Patterns/
   Templates vocabulary, owned human+machine docs, Templates propagate change, lint kills Tailwind
   ambiguity, agents for drift + token migration, and the "redesign test" success metric.
+- **Slide-deck presentation built (`src/site/`, served at `/site.html`).** A second Vite entry
+  renders the audit + roadmap docs verbatim via react-markdown as a navigable deck (title slide,
+  per-section slides, roadmap phase treatment with a pointer/scroll-tracking timeline bead,
+  metric-card "measure success" slide, closing wrap-up). Motion per the motion-principles skill
+  (Jakub/Jhey polish + Emil restraint), reduced-motion safe.
+- **Published to GitHub Pages.** Created public repo **eddiemachado/hostaway-take-home**, added a
+  Vite `base` (`/hostaway-take-home/`) for prod + a GitHub Actions Pages workflow. Live:
+  deck → https://eddiemachado.github.io/hostaway-take-home/site.html ·
+  app → https://eddiemachado.github.io/hostaway-take-home/ . _Note: the task prompt PDF is tracked
+  → it's public; remove if undesired._
