@@ -651,3 +651,19 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   Slides/Reservations cross-links + theme toggle) used by both the deck and the app for
   back-and-forth navigation. **Stripped the Reservations app chrome** (sidebar + topbar) so it
   focuses on the table + filters; `ListPageTemplate` is now SiteHeader + the content container.
+- **FilterBuilder popover scroll fix.** When several conditions were added the popover overflowed
+  the viewport and the footer (Apply/Cancel) was clipped. Moved the height bound + `overflow-hidden`
+  onto the `Popover`, let the `Dialog` fill it (`flex-1 min-h-0`), and made the conditions list the
+  scroll region while header/footer stay pinned (`shrink-0`). Verified via Playwright.
+- **Unified Tabs + Saved Views into one tab strip (`ViewTabs` organism).** Recognised that the
+  status tabs and the Saved Views feature were two mechanisms for one concept — *a named snapshot of
+  filters with a count*. System presets are now expressed in the **same `AppliedFilter[]` model** as
+  user views (on the `status` field) instead of bespoke `match()` predicates, so everything runs
+  through one filter pipeline. `filters` is the single source of truth; the active tab is **derived**
+  via `filtersEqual` (added to `lib/filtering.ts`). Selecting any view replaces the filter set (a
+  view = a complete snapshot), so a preset's constraint also shows as an editable FilterBar chip.
+  A transient **Custom** tab appears when filters match no view; the trailing **+ Save view** popover
+  saves the current custom set and manages/deletes user views. The standalone toolbar `SavedViews`
+  dropdown was removed from the page (component kept in the catalog). Verified end-to-end via
+  Playwright (select preset → chip + count, add filter → Custom tab, save → named tab persists,
+  save disabled when filters match a preset).

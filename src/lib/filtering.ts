@@ -118,6 +118,47 @@ export function matches(type: FieldType, raw: unknown, value: FilterValue): bool
     }
 }
 
+/** Canonical, comparable form of a single filter value (order-independent for enums). */
+function canonicalValue(type: FieldType, value: FilterValue): unknown {
+    switch (type) {
+        case "enum":
+            return [...(value as EnumValue)].sort();
+        case "text":
+            return (value as TextValue).trim().toLowerCase();
+        case "number": {
+            const v = value as NumberValue;
+            return { min: v.min ?? null, max: v.max ?? null };
+        }
+        case "date": {
+            const v = value as DateValue;
+            return { from: v.from ?? null, to: v.to ?? null };
+        }
+    }
+}
+
+/**
+ * Order-independent equality between two filter sets, ignoring empty conditions. Used to derive
+ * which view (system tab or saved view) the current filters correspond to.
+ */
+export function filtersEqual(a: AppliedFilter[], b: AppliedFilter[], fields: FieldDef[]): boolean {
+    const norm = (filters: AppliedFilter[]) =>
+        filters
+            .filter((f) => {
+                const field = fields.find((x) => x.id === f.fieldId);
+                return field && !isEmpty(field.type, f.value);
+            })
+            .map((f) => {
+                const field = fields.find((x) => x.id === f.fieldId)!;
+                return { fieldId: f.fieldId, value: canonicalValue(field.type, f.value) };
+            })
+            .sort((x, y) => {
+                const k = `${x.fieldId}:${JSON.stringify(x.value)}`;
+                const l = `${y.fieldId}:${JSON.stringify(y.value)}`;
+                return k < l ? -1 : k > l ? 1 : 0;
+            });
+    return JSON.stringify(norm(a)) === JSON.stringify(norm(b));
+}
+
 /** Apply a set of filters to rows (AND across filters). */
 export function applyFilters<T>(rows: T[], filters: AppliedFilter[], fields: FieldDef[]): T[] {
     const active = filters.filter((f) => {

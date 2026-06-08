@@ -1,22 +1,21 @@
 import { useMemo, useState } from "react";
 import { Download01, Edit01, Eye, FilterLines, Mail01, Plus, SearchLg, SlashCircle01, UploadCloud02 } from "@untitledui/icons";
-import type { Key, Selection, SortDescriptor } from "react-aria-components";
+import type { Selection, SortDescriptor } from "react-aria-components";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { Badge, BadgeWithDot, type BadgeColor } from "@/components/base/badges/badges";
 import { Button } from "@/components/base/buttons/button";
 import { Dropdown } from "@/components/base/dropdown/dropdown";
 import { Input } from "@/components/base/input/input";
 import { Table } from "@/components/application/table/table";
-import { Tabs } from "@/components/application/tabs/tabs";
 import { PaginationLine } from "@/components/application/pagination/pagination-line";
 import { PageHeader } from "@/organisms/PageHeader";
 import { Toolbar } from "@/organisms/Toolbar";
 import { FilterBar } from "@/organisms/FilterBar";
 import { FilterBuilder } from "@/organisms/FilterBuilder";
-import { SavedViews } from "@/organisms/SavedViews";
+import { ViewTabs, type ViewTab } from "@/organisms/ViewTabs";
 import { BulkActionBar } from "@/organisms/BulkActionBar";
 import { ListPageTemplate } from "@/templates/ListPageTemplate";
-import { applyFilters, type AppliedFilter } from "@/lib/filtering";
+import { applyFilters, filtersEqual, type AppliedFilter } from "@/lib/filtering";
 import { useSavedViews } from "@/lib/savedViews";
 import { RESERVATIONS, RESERVATION_FIELDS, type Channel, type Reservation, type ReservationStatus } from "./data";
 
@@ -44,13 +43,18 @@ const formatDate = (iso: string) => {
 const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 const initialsOf = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
-const TABS = [
-    { id: "all", label: "All", match: () => true },
-    { id: "upcoming", label: "Upcoming", match: (r: Reservation) => r.status === "Confirmed" || r.status === "Pending" },
-    { id: "inhouse", label: "In-house", match: (r: Reservation) => r.status === "Checked-in" },
-    { id: "completed", label: "Completed", match: (r: Reservation) => r.status === "Checked-out" },
-    { id: "cancelled", label: "Cancelled", match: (r: Reservation) => r.status === "Cancelled" },
-] as const;
+/**
+ * System presets, expressed in the SAME model as user-saved views: a named snapshot of filters.
+ * (Previously bespoke `match()` predicates — now just AppliedFilter[] on the `status` field, so
+ * tabs and saved views run through one filter pipeline and render in one tab strip.)
+ */
+const SYSTEM_VIEWS: { id: string; label: string; filters: AppliedFilter[] }[] = [
+    { id: "all", label: "All", filters: [] },
+    { id: "upcoming", label: "Upcoming", filters: [{ fieldId: "status", value: ["Confirmed", "Pending"] }] },
+    { id: "inhouse", label: "In-house", filters: [{ fieldId: "status", value: ["Checked-in"] }] },
+    { id: "completed", label: "Completed", filters: [{ fieldId: "status", value: ["Checked-out"] }] },
+    { id: "cancelled", label: "Cancelled", filters: [{ fieldId: "status", value: ["Cancelled"] }] },
+];
 
 const sortValue: Record<string, (r: Reservation) => string | number> = {
     guestName: (r) => r.guestName,
@@ -62,7 +66,6 @@ const sortValue: Record<string, (r: Reservation) => string | number> = {
 };
 
 export default function ReservationsPage() {
-    const [tab, setTab] = useState<string>("all");
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState<AppliedFilter[]>([]);
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({ column: "checkIn", direction: "ascending" });
@@ -70,21 +73,43 @@ export default function ReservationsPage() {
     const [page, setPage] = useState(1);
     const [builderOpen, setBuilderOpen] = useState(false);
 
-    const { views, save, remove } = useSavedViews("hostaway.reservations.views");
+    const { views: savedViews, save, remove } = useSavedViews("hostaway.reservations.views");
 
-    const changeTab = (key: string) => { setTab(key); setPage(1); setSelectedKeys(new Set()); };
     const changeSearch = (value: string) => { setSearch(value); setPage(1); };
-    const commitFilters = (next: AppliedFilter[]) => { setFilters(next); setPage(1); };
+    const commitFilters = (next: AppliedFilter[]) => { setFilters(next); setPage(1); setSelectedKeys(new Set()); };
 
-    const tabCounts = useMemo(() => Object.fromEntries(TABS.map((t) => [t.id, RESERVATIONS.filter(t.match).length])), []);
-
+    // Search is the only scoping that isn't a filter; the active view's filters live in `filters`.
     const base = useMemo(() => {
-        const tabMatch = TABS.find((t) => t.id === tab)!.match;
         const q = search.trim().toLowerCase();
+        if (q === "") return RESERVATIONS;
         return RESERVATIONS.filter(
-            (r) => tabMatch(r) && (q === "" || r.guestName.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || r.property.toLowerCase().includes(q)),
+            (r) => r.guestName.toLowerCase().includes(q) || r.code.toLowerCase().includes(q) || r.property.toLowerCase().includes(q),
         );
-    }, [tab, search]);
+    }, [search]);
+
+    // System presets + saved views, unified. Counts are search-aware (relative to `base`).
+    const allViews = useMemo(
+        () => [...SYSTEM_VIEWS, ...savedViews.map((v) => ({ id: v.id, label: v.name, filters: v.filters }))],
+        [savedViews],
+    );
+    const activeViewId = useMemo(
+        () => allViews.find((v) => filtersEqual(v.filters, filters, RESERVATION_FIELDS))?.id ?? null,
+        [allViews, filters],
+    );
+    const viewTabs: ViewTab[] = useMemo(
+        () =>
+            allViews.map((v) => ({
+                id: v.id,
+                label: v.label,
+                count: applyFilters(base, v.filters, RESERVATION_FIELDS).length,
+                system: SYSTEM_VIEWS.some((s) => s.id === v.id),
+            })),
+        [allViews, base],
+    );
+    const selectView = (id: string) => {
+        const view = allViews.find((v) => v.id === id);
+        if (view) commitFilters(view.filters);
+    };
 
     const filtered = useMemo(() => applyFilters(base, filters, RESERVATION_FIELDS), [base, filters]);
 
@@ -125,13 +150,15 @@ export default function ReservationsPage() {
                         </>
                     }
                     tabs={
-                        <Tabs selectedKey={tab} onSelectionChange={(k: Key) => changeTab(String(k))}>
-                            <Tabs.List type="underline" aria-label="Reservation views">
-                                {TABS.map((t) => (
-                                    <Tabs.Item key={t.id} id={t.id} label={t.label} badge={tabCounts[t.id]} />
-                                ))}
-                            </Tabs.List>
-                        </Tabs>
+                        <ViewTabs
+                            views={viewTabs}
+                            activeId={activeViewId}
+                            customCount={filtered.length}
+                            onSelect={selectView}
+                            onSaveView={(name) => save(name, filters)}
+                            onDeleteView={remove}
+                            canSave={activeViewId === null}
+                        />
                     }
                 />
             }
@@ -143,25 +170,16 @@ export default function ReservationsPage() {
                         </div>
                     }
                     right={
-                        <>
-                            <SavedViews
-                                views={views}
-                                canSave={filters.length > 0}
-                                onSave={(name) => save(name, filters)}
-                                onDelete={remove}
-                                onApply={(view) => commitFilters(view.filters)}
-                            />
-                            <FilterBuilder
-                                trigger={addFilterTrigger}
-                                isOpen={builderOpen}
-                                onOpenChange={setBuilderOpen}
-                                fields={RESERVATION_FIELDS}
-                                appliedFilters={filters}
-                                onApply={commitFilters}
-                                previewCount={previewCount}
-                                totalCount={base.length}
-                            />
-                        </>
+                        <FilterBuilder
+                            trigger={addFilterTrigger}
+                            isOpen={builderOpen}
+                            onOpenChange={setBuilderOpen}
+                            fields={RESERVATION_FIELDS}
+                            appliedFilters={filters}
+                            onApply={commitFilters}
+                            previewCount={previewCount}
+                            totalCount={base.length}
+                        />
                     }
                 />
             }
