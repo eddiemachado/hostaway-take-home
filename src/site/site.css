@@ -4,6 +4,19 @@
  * staggered enter (opacity + translateY). Fully disabled under prefers-reduced-motion.
  */
 
+/* Slide indicator dots — the active pill morphs width with a subtle spring; color fades.
+   Explicit properties (not `transition: all`); motion-safe. */
+.deck-dot {
+    transition:
+        width 320ms cubic-bezier(0.34, 1.4, 0.64, 1),
+        background-color 200ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    .deck-dot {
+        transition: background-color 200ms ease;
+    }
+}
+
 /* Slide enter — the card eases up + sharpens. */
 .deck-slide {
     animation: deck-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;

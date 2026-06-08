@@ -159,8 +159,8 @@ function RoadmapOverview() {
 /** Closing summary of the whole presentation (audit → system → roadmap). */
 function WrapUp() {
     const cards = [
-        { k: "The problem", v: "Untitled UI got us moving fast, but it isn't a system yet — no single source of truth, no owned docs, and Tailwind leaves no clear answer." },
-        { k: "The approach", v: "Own the foundations as tokens, keep a simple vocabulary (Foundations · Components · Patterns · Templates), and write docs for humans and AI so change propagates." },
+        { k: "The problem", v: "Untitled UI got us moving fast, but it isn't a system yet: no single source of truth, no owned docs, and Tailwind leaves no clear answer." },
+        { k: "The approach", v: "Own the foundations as tokens, build a common vocabulary, and write a system where AI is a support system rather than the engine." },
         { k: "The plan", v: "Audit → foundations & tokens → build components & patterns → migration & governance, with agents and workflows keeping us aligned as we build." },
     ];
     return (
@@ -242,15 +242,9 @@ export function SlideDeck() {
     }, [index, updateEdges]);
 
     const slide = SLIDES[index];
-    const progress = ((index + 1) / total) * 100;
 
     return (
         <div className="flex h-screen flex-col bg-primary">
-            {/* progress */}
-            <div className="h-0.5 w-full bg-transparent">
-                <div className="h-full bg-brand-solid transition-[width] duration-200 ease-out" style={{ width: `${progress}%` }} aria-hidden="true" />
-            </div>
-
             {/* top chrome */}
             <header
                 className={`z-10 flex h-14 shrink-0 items-center justify-between bg-primary px-5 transition-shadow duration-200 ${
@@ -351,11 +345,9 @@ export function SlideDeck() {
                             onClick={() => goTo(i)}
                             aria-label={`Go to slide ${i + 1}`}
                             aria-current={i === index}
-                            className={
-                                i === index
-                                    ? "h-1.5 w-6 rounded-full bg-brand-solid transition-all duration-200 ease-out"
-                                    : "h-1.5 w-1.5 rounded-full bg-quaternary transition-all duration-200 ease-out hover:bg-tertiary"
-                            }
+                            className={`deck-dot h-1.5 cursor-pointer rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
+                                i === index ? "w-6 bg-brand-solid" : "w-1.5 bg-quaternary hover:bg-tertiary"
+                            }`}
                         />
                     ))}
                 </div>
