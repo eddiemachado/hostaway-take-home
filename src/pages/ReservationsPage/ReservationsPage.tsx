@@ -12,10 +12,10 @@ import { PageHeader } from "@/organisms/PageHeader";
 import { Toolbar } from "@/organisms/Toolbar";
 import { FilterBar } from "@/organisms/FilterBar";
 import { FilterBuilder } from "@/organisms/FilterBuilder";
-import { ViewTabs, type ViewTab } from "@/organisms/ViewTabs";
+import { ViewTabs } from "@/organisms/ViewTabs";
 import { BulkActionBar } from "@/organisms/BulkActionBar";
 import { ListPageTemplate } from "@/templates/ListPageTemplate";
-import { applyFilters, filtersEqual, type AppliedFilter } from "@/lib/filtering";
+import { applyFilters, isEmpty, type AppliedFilter } from "@/lib/filtering";
 import { useSavedViews } from "@/lib/savedViews";
 import { RESERVATIONS, RESERVATION_FIELDS, type Channel, type Reservation, type ReservationStatus } from "./data";
 
@@ -44,17 +44,18 @@ const currency = new Intl.NumberFormat("en-US", { style: "currency", currency: "
 const initialsOf = (name: string) => name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
 /**
- * System presets, expressed in the SAME model as user-saved views: a named snapshot of filters.
- * (Previously bespoke `match()` predicates — now just AppliedFilter[] on the `status` field, so
- * tabs and saved views run through one filter pipeline and render in one tab strip.)
+ * System-level status tabs. These are a *scope* dimension, independent of the filter layer:
+ * switching tabs keeps your filters in place. `statuses: null` means "no status constraint".
  */
-const SYSTEM_VIEWS: { id: string; label: string; filters: AppliedFilter[] }[] = [
-    { id: "all", label: "All", filters: [] },
-    { id: "upcoming", label: "Upcoming", filters: [{ fieldId: "status", value: ["Confirmed", "Pending"] }] },
-    { id: "inhouse", label: "In-house", filters: [{ fieldId: "status", value: ["Checked-in"] }] },
-    { id: "completed", label: "Completed", filters: [{ fieldId: "status", value: ["Checked-out"] }] },
-    { id: "cancelled", label: "Cancelled", filters: [{ fieldId: "status", value: ["Cancelled"] }] },
+const STATUS_TABS: { id: string; label: string; statuses: ReservationStatus[] | null }[] = [
+    { id: "all", label: "All", statuses: null },
+    { id: "upcoming", label: "Upcoming", statuses: ["Confirmed", "Pending"] },
 ];
+const DEFAULT_TAB = "all";
+const inStatusScope = (tabId: string, r: Reservation) => {
+    const t = STATUS_TABS.find((x) => x.id === tabId);
+    return !t || t.statuses === null || t.statuses.includes(r.status);
+};
 
 const sortValue: Record<string, (r: Reservation) => string | number> = {
     guestName: (r) => r.guestName,
@@ -66,6 +67,10 @@ const sortValue: Record<string, (r: Reservation) => string | number> = {
 };
 
 export default function ReservationsPage() {
+    const [statusTab, setStatusTab] = useState<string>(DEFAULT_TAB);
+    // The single highlighted tab — a system tab id OR a saved-view id. Tracked explicitly (not
+    // derived from filters) so exactly one tab is ever active, and clicking a system tab always wins.
+    const [activeKey, setActiveKey] = useState<string>(DEFAULT_TAB);
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState<AppliedFilter[]>([]);
     const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({ column: "checkIn", direction: "ascending" });
@@ -76,9 +81,33 @@ export default function ReservationsPage() {
     const { views: savedViews, save, remove } = useSavedViews("hostaway.reservations.views");
 
     const changeSearch = (value: string) => { setSearch(value); setPage(1); };
-    const commitFilters = (next: AppliedFilter[]) => { setFilters(next); setPage(1); setSelectedKeys(new Set()); };
+    // Editing filters (builder/chips) drops the highlight to the current system scope — you're no
+    // longer "in" a saved view once you change its filters.
+    const commitFilters = (next: AppliedFilter[]) => { setFilters(next); setActiveKey(statusTab); setPage(1); setSelectedKeys(new Set()); };
 
-    // Search is the only scoping that isn't a filter; the active view's filters live in `filters`.
+    // Two independent dimensions: the system status tab (scope) and the filter layer. Manually-set
+    // filters persist when switching system tabs — but a saved view's filters belong to that view,
+    // so leaving a saved view for a system tab clears them.
+    const selectStatusTab = (id: string) => {
+        const leavingSavedView = savedViews.some((v) => v.id === activeKey);
+        setStatusTab(id);
+        setActiveKey(id);
+        if (leavingSavedView) setFilters([]);
+        setPage(1);
+        setSelectedKeys(new Set());
+    };
+    const openSavedView = (id: string) => {
+        const view = savedViews.find((v) => v.id === id);
+        if (!view) return;
+        setActiveKey(id);
+        setStatusTab(DEFAULT_TAB); // a saved preset shows across all statuses
+        setFilters(view.filters);
+        setPage(1);
+        setSelectedKeys(new Set());
+    };
+    // "Clear filters" returns to the default view: no filters, default tab.
+    const clearToDefault = () => { setStatusTab(DEFAULT_TAB); setActiveKey(DEFAULT_TAB); setFilters([]); setPage(1); setSelectedKeys(new Set()); };
+
     const base = useMemo(() => {
         const q = search.trim().toLowerCase();
         if (q === "") return RESERVATIONS;
@@ -87,31 +116,19 @@ export default function ReservationsPage() {
         );
     }, [search]);
 
-    // System presets + saved views, unified. Counts are search-aware (relative to `base`).
-    const allViews = useMemo(
-        () => [...SYSTEM_VIEWS, ...savedViews.map((v) => ({ id: v.id, label: v.name, filters: v.filters }))],
-        [savedViews],
-    );
-    const activeViewId = useMemo(
-        () => allViews.find((v) => filtersEqual(v.filters, filters, RESERVATION_FIELDS))?.id ?? null,
-        [allViews, filters],
-    );
-    const viewTabs: ViewTab[] = useMemo(
-        () =>
-            allViews.map((v) => ({
-                id: v.id,
-                label: v.label,
-                count: applyFilters(base, v.filters, RESERVATION_FIELDS).length,
-                system: SYSTEM_VIEWS.some((s) => s.id === v.id),
-            })),
-        [allViews, base],
-    );
-    const selectView = (id: string) => {
-        const view = allViews.find((v) => v.id === id);
-        if (view) commitFilters(view.filters);
-    };
+    // Rows in the active status scope (search applied), before the filter layer.
+    const scoped = useMemo(() => base.filter((r) => inStatusScope(statusTab, r)), [base, statusTab]);
 
-    const filtered = useMemo(() => applyFilters(base, filters, RESERVATION_FIELDS), [base, filters]);
+    const systemTabs = useMemo(() => STATUS_TABS.map((t) => ({ id: t.id, label: t.label })), []);
+    const savedViewTabs = useMemo(() => savedViews.map((v) => ({ id: v.id, label: v.name })), [savedViews]);
+    const hasFilters = filters.some((f) => {
+        const field = RESERVATION_FIELDS.find((x) => x.id === f.fieldId);
+        return field && !isEmpty(field.type, f.value);
+    });
+    // Can save when there are filters and we're not already sitting on a saved view.
+    const canSaveView = hasFilters && !savedViews.some((v) => v.id === activeKey);
+
+    const filtered = useMemo(() => applyFilters(scoped, filters, RESERVATION_FIELDS), [scoped, filters]);
 
     const sorted = useMemo(() => {
         const get = sortValue[String(sortDescriptor.column)];
@@ -128,7 +145,7 @@ export default function ReservationsPage() {
     const safePage = Math.min(page, pageCount);
     const pageRows = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-    const previewCount = (candidate: AppliedFilter[]) => applyFilters(base, candidate, RESERVATION_FIELDS).length;
+    const previewCount = (candidate: AppliedFilter[]) => applyFilters(scoped, candidate, RESERVATION_FIELDS).length;
     const selectedCount = selectedKeys === "all" ? pageRows.length : selectedKeys.size;
 
     const addFilterTrigger = (
@@ -151,13 +168,14 @@ export default function ReservationsPage() {
                     }
                     tabs={
                         <ViewTabs
-                            views={viewTabs}
-                            activeId={activeViewId}
-                            customCount={filtered.length}
-                            onSelect={selectView}
+                            systemTabs={systemTabs}
+                            savedViews={savedViewTabs}
+                            activeKey={activeKey}
+                            onSelectSystemTab={selectStatusTab}
+                            onOpenSavedView={openSavedView}
                             onSaveView={(name) => save(name, filters)}
                             onDeleteView={remove}
-                            canSave={activeViewId === null}
+                            canSave={canSaveView}
                         />
                     }
                 />
@@ -165,11 +183,6 @@ export default function ReservationsPage() {
             toolbar={
                 <Toolbar
                     left={
-                        <div className="w-full max-w-xs">
-                            <Input icon={SearchLg} aria-label="Search reservations" placeholder="Search guest, code, property…" value={search} onChange={changeSearch} size="sm" />
-                        </div>
-                    }
-                    right={
                         <FilterBuilder
                             trigger={addFilterTrigger}
                             isOpen={builderOpen}
@@ -178,8 +191,13 @@ export default function ReservationsPage() {
                             appliedFilters={filters}
                             onApply={commitFilters}
                             previewCount={previewCount}
-                            totalCount={base.length}
+                            totalCount={scoped.length}
                         />
+                    }
+                    right={
+                        <div className="w-[300px] max-w-full">
+                            <Input icon={SearchLg} aria-label="Search reservations" placeholder="Search guest, code, property…" value={search} onChange={changeSearch} size="sm" />
+                        </div>
                     }
                 />
             }
@@ -189,9 +207,9 @@ export default function ReservationsPage() {
                     filters={filters}
                     onEditFilters={() => setBuilderOpen(true)}
                     onRemoveFilter={(i) => commitFilters(filters.filter((_, idx) => idx !== i))}
-                    onClearAll={() => commitFilters([])}
+                    onClearAll={clearToDefault}
                     resultCount={sorted.length}
-                    totalCount={RESERVATIONS.length}
+                    totalCount={scoped.length}
                 />
             }
             footer={<PaginationLine page={safePage} total={pageCount} onPageChange={setPage} />}

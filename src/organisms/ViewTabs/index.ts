@@ -1,2 +1,2 @@
 export { ViewTabs } from "./ViewTabs";
-export type { ViewTab, ViewTabsProps } from "./ViewTabs";
+export type { SystemTab, SavedViewTab, ViewTabsProps } from "./ViewTabs";

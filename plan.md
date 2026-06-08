@@ -655,15 +655,22 @@ Chronological. Newest entries appended at the bottom. Captures *what changed* an
   the viewport and the footer (Apply/Cancel) was clipped. Moved the height bound + `overflow-hidden`
   onto the `Popover`, let the `Dialog` fill it (`flex-1 min-h-0`), and made the conditions list the
   scroll region while header/footer stay pinned (`shrink-0`). Verified via Playwright.
-- **Unified Tabs + Saved Views into one tab strip (`ViewTabs` organism).** Recognised that the
-  status tabs and the Saved Views feature were two mechanisms for one concept — *a named snapshot of
-  filters with a count*. System presets are now expressed in the **same `AppliedFilter[]` model** as
-  user views (on the `status` field) instead of bespoke `match()` predicates, so everything runs
-  through one filter pipeline. `filters` is the single source of truth; the active tab is **derived**
-  via `filtersEqual` (added to `lib/filtering.ts`). Selecting any view replaces the filter set (a
-  view = a complete snapshot), so a preset's constraint also shows as an editable FilterBar chip.
-  A transient **Custom** tab appears when filters match no view; the trailing **+ Save view** popover
-  saves the current custom set and manages/deletes user views. The standalone toolbar `SavedViews`
-  dropdown was removed from the page (component kept in the catalog). Verified end-to-end via
-  Playwright (select preset → chip + count, add filter → Custom tab, save → named tab persists,
-  save disabled when filters match a preset).
+- **Tabs + Saved Views in one strip (`ViewTabs` organism).** Status tabs and saved views share one
+  underline tab strip (system tabs · divider · saved views · trailing **+**), but they are **two
+  independent dimensions**, not one snapshot:
+  - **System tabs** (All, Upcoming) are a *status scope*. Switching them keeps your manually-set
+    filters in place; the scope is not shown as a chip.
+  - **Filters** are a layer on top, shown as FilterBar chips, that persist across system-tab nav.
+  - **Saved views** are named filter presets (localStorage). Opening one restores its filters and
+    resets the scope to All. A view's filters belong to the view — leaving it for a system tab clears
+    them (only filters you set by hand persist).
+  - The **+** (icon-only, tooltip "Save view") saves the current filters as a new view and
+    manages/deletes existing ones; disabled while sitting on a saved view.
+  - **Clear all** returns to the default view (All, no filters).
+  Single source of truth is `filters` + a `statusTab` scope + an explicit `activeKey` so **exactly
+  one tab highlights** (system tabs and saved views are one React Aria `Tabs` collection — RAC
+  guarantees a single selection; the divider is CSS on the first saved tab). The standalone toolbar
+  `SavedViews` dropdown was removed (component kept in the catalog); search and Add-filter were
+  swapped (Add filter left, 300px search right). Verified end-to-end via Playwright (filter persists
+  across system tabs; saved-view filters clear on leaving; single active tab through every path;
+  save/scroll/tooltip).
